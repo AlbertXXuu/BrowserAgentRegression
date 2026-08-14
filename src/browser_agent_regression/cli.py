@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
+import getpass
 import json
+import os
+import sys
 from pathlib import Path
 from threading import Event
 from typing import cast
@@ -132,6 +136,75 @@ def _calibrate(args: argparse.Namespace) -> int:
     return 0 if target_regression and clean_parity else 1
 
 
+def _resolve_deepseek_api_key() -> str:
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    if api_key:
+        return api_key
+    if not sys.stdin.isatty():
+        raise RuntimeError(
+            "DEEPSEEK_API_KEY is missing and hidden input is unavailable. "
+            "Set it in the current process or CI secret store."
+        )
+
+    print("No DEEPSEEK_API_KEY was found.")
+    print("Create or copy a key at https://platform.deepseek.com/api_keys")
+    api_key = getpass.getpass("DeepSeek API key (hidden; not stored): ").strip()
+    if not api_key:
+        raise RuntimeError("A DeepSeek API key is required for this command.")
+    return api_key
+
+
+def _deepseek(args: argparse.Namespace) -> int:
+    try:
+        api_key = _resolve_deepseek_api_key()
+        from browser_agent_regression.browser_use_deepseek import (
+            deepseek_run_identity,
+            run_deepseek_matrix,
+        )
+
+        tasks = _tasks(args.task)
+        variants = _variants(args.variant or ["clean"])
+        attempt_count = len(tasks) * len(variants) * args.runs
+        print(
+            f"Running Browser Use + {args.model}: {attempt_count} paid API "
+            f"attempt{'s' if attempt_count != 1 else ''}."
+        )
+        attempts = asyncio.run(
+            run_deepseek_matrix(
+                api_key=api_key,
+                model=args.model,
+                tasks=tasks,
+                variants=variants,
+                runs=args.runs,
+                headed=args.headed,
+                max_steps=args.max_steps,
+            )
+        )
+    except RuntimeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    report = build_report(
+        attempts,
+        command="deepseek",
+        runs=args.runs,
+        tasks=tasks,
+        variants=variants,
+        evidence_kind="real-agent",
+        run_identity=deepseek_run_identity(model=args.model, max_steps=args.max_steps),
+    )
+    _write_report(report, args.output)
+    passed = sum(attempt.passed for attempt in attempts)
+    print(f"Real-agent result: {passed}/{len(attempts)} attempts passed independent checks.")
+    for attempt in attempts:
+        if not attempt.passed:
+            print(
+                f"FAILED {attempt.task_id} [{attempt.variant}] first checkpoint: "
+                f"{attempt.first_failed_checkpoint or 'agent/runtime error'}"
+            )
+    return 0 if all(attempt.passed for attempt in attempts) else 1
+
+
 def _serve(args: argparse.Namespace) -> int:
     with FixtureServer(port=args.port) as server:
         print("Fixture server is ready. Press Ctrl+C to stop.")
@@ -173,6 +246,18 @@ def build_parser() -> argparse.ArgumentParser:
     _add_run_arguments(calibrate, default_runs=5)
     calibrate.set_defaults(handler=_calibrate)
 
+    deepseek = subparsers.add_parser(
+        "deepseek", help="Run Browser Use with DeepSeek against the local fixtures."
+    )
+    _add_run_arguments(deepseek, default_runs=1)
+    deepseek.add_argument(
+        "--model",
+        choices=("deepseek-v4-flash", "deepseek-v4-pro"),
+        default="deepseek-v4-flash",
+    )
+    deepseek.add_argument("--max-steps", type=int, default=12)
+    deepseek.set_defaults(handler=_deepseek)
+
     serve = subparsers.add_parser("serve", help="Serve fixtures for manual inspection.")
     serve.add_argument("--port", type=int, default=8765)
     serve.set_defaults(handler=_serve)
@@ -184,6 +269,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if getattr(args, "runs", 1) < 1:
         parser.error("--runs must be at least 1")
+    if getattr(args, "max_steps", 1) < 1:
+        parser.error("--max-steps must be at least 1")
     if args.command == "calibrate" and args.variant is not None:
         required_variants = {"clean", "popup-overlay"}
         if not required_variants.issubset(args.variant):

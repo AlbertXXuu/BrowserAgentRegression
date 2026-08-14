@@ -1,7 +1,9 @@
+import json
+
 import pytest
 from playwright.sync_api import sync_playwright
 
-from browser_agent_regression.runner import TASKS, VARIANTS, build_report, run_attempt
+from browser_agent_regression.runner import TASKS, VARIANTS, Attempt, build_report, run_attempt
 from browser_agent_regression.server import FixtureServer
 
 
@@ -47,6 +49,23 @@ def test_catalog_fixture_preserves_the_selected_product() -> None:
 
 
 @pytest.mark.browser
+def test_preferences_fixture_preserves_the_untouched_setting() -> None:
+    with FixtureServer() as server, sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page()
+        try:
+            page.goto(server.url("preferences.html"))
+            page.get_by_label("Product updates").uncheck()
+            page.get_by_label("Security alerts").check()
+            page.get_by_role("button", name="Save preferences").click()
+
+            assert page.get_by_label("Weekly summary").is_checked()
+            assert page.get_by_role("status").text_content() == "Preferences saved"
+        finally:
+            browser.close()
+
+
+@pytest.mark.browser
 def test_calibration_detects_popup_regression_only() -> None:
     with FixtureServer() as server, sync_playwright() as playwright:
         browser = playwright.chromium.launch()
@@ -81,6 +100,8 @@ def test_calibration_detects_popup_regression_only() -> None:
         "catalog.json",
         "checkout.html",
         "checkout.json",
+        "preferences.html",
+        "preferences.json",
     }
     regressions = {item["task_id"]: item for item in report["regressions"]}
     assert set(regressions) == set(TASKS)
@@ -88,5 +109,43 @@ def test_calibration_detects_popup_regression_only() -> None:
     assert regressions["catalog.find-and-save.v1"]["failed_checkpoint"] == (
         "catalog.query.applied"
     )
+    assert regressions["preferences.notifications.v1"]["failed_checkpoint"] == (
+        "preferences.product_updates.disabled"
+    )
     assert all(item["delta"] == -1.0 for item in regressions.values())
     assert all(item["failure_checkpoint_agreement"] == 1.0 for item in regressions.values())
+
+
+def test_real_agent_report_preserves_identity_without_credentials() -> None:
+    attempt = Attempt(
+        task_id="preferences.notifications.v1",
+        driver="browser-use/deepseek-v4-flash",
+        variant="clean",
+        passed=True,
+        duration_ms=100.0,
+        checkpoints={
+            "preferences.product_updates.disabled": True,
+            "preferences.security_alerts.enabled": True,
+            "preferences.saved": True,
+        },
+        first_failed_checkpoint=None,
+        error=None,
+    )
+    report = build_report(
+        [attempt],
+        command="deepseek",
+        runs=1,
+        tasks=["preferences.notifications.v1"],
+        variants=["clean"],
+        evidence_kind="real-agent",
+        run_identity={
+            "agent": "browser-use",
+            "model": "deepseek-v4-flash",
+            "credential_source": "hidden interactive prompt",
+        },
+    )
+
+    assert report["schema_version"] == "0.2"
+    assert report["evidence_kind"] == "real-agent"
+    assert report["configuration"]["run_identity"]["agent"] == "browser-use"
+    assert "api_key" not in json.dumps(report).lower()

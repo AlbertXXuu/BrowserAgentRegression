@@ -18,5 +18,8 @@ Never attach API keys, session cookies, private URLs, or unredacted agent traces
 
 - Packaged fixtures bind to `127.0.0.1`, not a public network interface.
 - Deterministic tests require no model credential.
-- Phase 0 does not execute arbitrary third-party agent commands.
+- The optional DeepSeek command accepts a key only from `DEEPSEEK_API_KEY` or hidden interactive
+  input; it does not place the key in command arguments or evidence.
+- The real-agent path runs the pinned Browser Use dependency against repository-owned fixtures;
+  Phase 0 does not execute arbitrary third-party agent commands.
 - Generated evidence must not contain credentials or browser session data.

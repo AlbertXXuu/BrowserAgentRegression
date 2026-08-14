@@ -16,8 +16,17 @@ from playwright.sync_api import Error as PlaywrightError
 from browser_agent_regression.server import FixtureServer
 
 Variant = Literal["clean", "popup-overlay", "delayed-render", "layout-shift"]
-Driver = Literal["reference", "popup-blind"]
-TaskId = Literal["checkout.basic.v1", "catalog.find-and-save.v1"]
+Driver = Literal[
+    "reference",
+    "popup-blind",
+    "browser-use/deepseek-v4-flash",
+    "browser-use/deepseek-v4-pro",
+]
+TaskId = Literal[
+    "checkout.basic.v1",
+    "catalog.find-and-save.v1",
+    "preferences.notifications.v1",
+]
 
 VARIANTS: tuple[Variant, ...] = (
     "clean",
@@ -28,10 +37,12 @@ VARIANTS: tuple[Variant, ...] = (
 TASKS: tuple[TaskId, ...] = (
     "checkout.basic.v1",
     "catalog.find-and-save.v1",
+    "preferences.notifications.v1",
 )
 TASK_FIXTURES: dict[TaskId, str] = {
     "checkout.basic.v1": "checkout.html",
     "catalog.find-and-save.v1": "catalog.html",
+    "preferences.notifications.v1": "preferences.html",
 }
 TASK_CHECKPOINTS: dict[TaskId, tuple[str, ...]] = {
     "checkout.basic.v1": (
@@ -43,6 +54,11 @@ TASK_CHECKPOINTS: dict[TaskId, tuple[str, ...]] = {
         "catalog.query.applied",
         "catalog.product.opened",
         "catalog.product.saved",
+    ),
+    "preferences.notifications.v1": (
+        "preferences.product_updates.disabled",
+        "preferences.security_alerts.enabled",
+        "preferences.saved",
     ),
 }
 
@@ -103,6 +119,21 @@ def _complete_catalog(page: Page, checkpoints: dict[str, bool]) -> None:
     )
 
 
+def _complete_preferences(page: Page, checkpoints: dict[str, bool]) -> None:
+    product_updates = page.get_by_label("Product updates")
+    product_updates.uncheck()
+    checkpoints["preferences.product_updates.disabled"] = not product_updates.is_checked()
+
+    security_alerts = page.get_by_label("Security alerts")
+    security_alerts.check()
+    checkpoints["preferences.security_alerts.enabled"] = security_alerts.is_checked()
+
+    page.get_by_role("button", name="Save preferences").click()
+    saved_status = page.get_by_role("status")
+    saved_status.wait_for(state="visible")
+    checkpoints["preferences.saved"] = saved_status.text_content() == "Preferences saved"
+
+
 def run_attempt(
     browser: Browser,
     server: FixtureServer,
@@ -131,8 +162,10 @@ def run_attempt(
 
         if task_id == "checkout.basic.v1":
             _complete_checkout(page, checkpoints)
-        else:
+        elif task_id == "catalog.find-and-save.v1":
             _complete_catalog(page, checkpoints)
+        else:
+            _complete_preferences(page, checkpoints)
     except PlaywrightError as exc:
         error = _bounded_error(exc)
     finally:
@@ -235,6 +268,8 @@ def build_report(
     tasks: list[TaskId],
     variants: list[Variant],
     browser_version: str | None = None,
+    evidence_kind: str = "synthetic-calibration",
+    run_identity: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summaries = summarize(attempts)
     regressions = find_regressions(summaries) if command == "calibrate" else []
@@ -251,9 +286,17 @@ def build_report(
         name: sha256((fixture_directory / name).read_bytes()).hexdigest()
         for name in sorted(fixture_names)
     }
+    configuration: dict[str, Any] = {
+        "runs_per_driver_task_variant": runs,
+        "tasks": tasks,
+        "variants": variants,
+    }
+    if run_identity is not None:
+        configuration["run_identity"] = run_identity
+
     return {
         "schema_version": "0.2",
-        "evidence_kind": "synthetic-calibration",
+        "evidence_kind": evidence_kind,
         "created_at": datetime.now(UTC).isoformat(),
         "task_ids": tasks,
         "command": command,
@@ -264,11 +307,7 @@ def build_report(
             "browser": browser_version,
         },
         "fixture_sha256": fixture_hashes,
-        "configuration": {
-            "runs_per_driver_task_variant": runs,
-            "tasks": tasks,
-            "variants": variants,
-        },
+        "configuration": configuration,
         "summaries": summaries,
         "regressions": regressions,
         "attempts": [asdict(attempt) for attempt in attempts],

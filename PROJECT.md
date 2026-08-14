@@ -64,12 +64,20 @@ technical success alone is not a GO decision.
 
 ### Current executable slice
 
-- Two tasks: checkout and catalog find-and-save.
-- All three perturbation classes on both tasks.
+- Three tasks: checkout, catalog find-and-save, and notification preferences.
+- All three perturbation classes on all three tasks.
 - A deterministic reference oracle.
 - A deliberately degraded calibration candidate.
 - CLI commands for serving, selecting tasks, oracle stability runs, and paired calibration.
+- One concrete optional Browser Use + DeepSeek command with hidden credential input and
+  independent DOM checkpoint scoring.
 - Evidence schema `0.2`, which adds task identity to attempts, summaries, and regressions.
+
+Gate A and Gate B pass on the third local slice: the reference oracle completed 360/360
+attempts, and the synthetic candidate produced three correctly localized popup regressions.
+The Gate C adapter is implemented and locally exercised without a provider call, but Gate C
+remains pending until one authenticated run completes all three goals. Gate D also remains
+pending.
 
 The calibration drivers are controls for the harness. They are not evidence about the quality
 of any model or browser-agent framework.

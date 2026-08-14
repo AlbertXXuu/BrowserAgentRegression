@@ -16,18 +16,19 @@
 还是悄悄破坏了原本能够完成的工作流？**
 
 项目目前处于 **5–7 天 Phase 0 验证期**，还不是通用框架。当前可运行切片包含确定性
-结账与商品查找任务、语义不变的受控 UI 扰动、检查点级评分、重复运行和 JSON 回归报告。
+结账、商品查找和通知偏好任务、语义不变的受控 UI 扰动、检查点级评分、重复运行和
+JSON 回归报告。
 
-> 当前完成了三个必需任务中的两个。只有 [PROJECT.md](PROJECT.md) 中所有技术和用户验证
-> Gate 均通过，Phase 0 才是 **GO**。在此之前，这个仓库代表的是一个可证伪的项目假设，
-> 不是已经完成的产品。
+> 三个必需任务均已完成，确定性 fixture 与合成回归 Gate 已通过；真实 Agent 可行性和
+> 两位独立开发者运行仍待验证。只有 [PROJECT.md](PROJECT.md) 中所有 Gate 均通过，
+> Phase 0 才是 **GO**。在此之前，这个仓库仍是一个可证伪的项目假设，不是完成品。
 
 仓库通过 [AOS-0.1 符合性记录](docs/ailumetra-conformance.md)跟踪系列标准，但不会因此
 扩大 Phase 0 范围。
 
 ## Phase 0 校准证据
 
-第二个切片在本地同一份源码快照上重复运行。确定性 reference Oracle 在两个任务的所有当前
+第三个切片在本地同一份源码快照上重复运行。确定性 reference Oracle 在三个任务的所有当前
 条件下均完成 30/30 次：
 
 | 任务 | 条件 | Reference Oracle | 校准 Baseline | 校准 Candidate |
@@ -40,12 +41,17 @@
 | `catalog.find-and-save.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
 | `catalog.find-and-save.v1` | `delayed-render` | 30/30 | — | — |
 | `catalog.find-and-save.v1` | `layout-shift` | 30/30 | — | — |
+| `preferences.notifications.v1` | `clean` | 30/30 | 10/10 | 10/10 |
+| `preferences.notifications.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
+| `preferences.notifications.v1` | `delayed-render` | 30/30 | — | — |
+| `preferences.notifications.v1` | `layout-shift` | 30/30 | — | — |
 
-人为设置的 popup-blind candidate 在两个任务的 clean 条件下保持成功率，但在 overlay
+人为设置的 popup-blind candidate 在三个任务的 clean 条件下保持成功率，但在 overlay
 条件下均下降 100 个百分点；所有失败均首先定位到对应任务的预期检查点：
-`checkout.email.accepted` 或 `catalog.query.applied`。可以直接检查保存的
-[Oracle 证据](docs/evidence/phase0-slice-02-oracle.json)与
-[校准证据](docs/evidence/phase0-slice-02-calibration.json)。
+`checkout.email.accepted`、`catalog.query.applied` 或
+`preferences.product_updates.disabled`。可以直接检查保存的
+[Oracle 证据](docs/evidence/phase0-slice-03-oracle.json)与
+[校准证据](docs/evidence/phase0-slice-03-calibration.json)。
 
 这些是**合成 runner 校准结果**，不是模型或真实浏览器 Agent 的 benchmark 分数。它们只用来
 证明 fixture 稳定且 runner 能检测回归，然后才值得接入真实 Agent。
@@ -59,7 +65,7 @@
 
 ## 当前可运行切片
 
-内置结账任务与商品查找并收藏任务都包含四种条件：
+内置结账、商品查找并收藏、通知偏好设置任务都包含四种条件：
 
 - `clean`
 - `popup-overlay`
@@ -109,6 +115,19 @@ browser-agent-regression calibrate --runs 10 --output calibration.json
 ```bash
 browser-agent-regression serve
 ```
+
+## 可选真实 Agent：Browser Use + DeepSeek
+
+安装隔离的 Agent 依赖，先运行一次付费测试：
+
+```bash
+python -m pip install -e ".[agent]"
+browser-agent-regression deepseek --task preferences.notifications.v1 --runs 1 --headed
+```
+
+如果没有设置 `DEEPSEEK_API_KEY`，CLI 会引导你前往官方平台，并通过隐藏输入接收 Key，
+不会将其保存。运行三个任务前请阅读完整的 [DeepSeek 安装与安全用 Key 教程](docs/deepseek.zh-CN.md)。
+真实 Agent 由独立 DOM 检查点评分，并与上面的合成校准严格区分。
 
 ## 帮助验证 Phase 0
 
