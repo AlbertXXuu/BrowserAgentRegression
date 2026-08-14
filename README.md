@@ -114,6 +114,16 @@ Run the local fixture manually:
 browser-agent-regression serve
 ```
 
+## Help validate Phase 0
+
+If you maintain, evaluate, or study browser agents, clone the repository and run the two
+commands above on your own machine. Then submit the
+[Phase 0 independent-run form](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=phase0-run.yml).
+
+A successful report and a blocked report are both useful. The external-demand gate counts only
+non-maintainer runs that include a tested revision, environment, commands, safe evidence, and
+concrete workflow feedback. Stars and page views do not count.
+
 ## Development
 
 ```bash

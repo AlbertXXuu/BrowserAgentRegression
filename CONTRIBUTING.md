@@ -2,6 +2,9 @@
 
 Browser Agent Regression is in a time-boxed Phase 0. The most valuable contributions are
 reproducible runs and concrete feedback from developers who maintain browser agents.
+Use the
+[Phase 0 independent-run form](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=phase0-run.yml)
+for a clean-environment result or blocker.
 
 ## Before opening a change
 

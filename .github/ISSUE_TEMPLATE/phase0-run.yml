@@ -1,0 +1,90 @@
+name: Phase 0 independent run
+description: Share a successful or blocked clean-environment run of the current fixture slice.
+title: "[Phase 0 run]: "
+labels:
+  - phase0-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing Browser Agent Regression. Successful and blocked runs are both useful. A run counts toward the external-demand gate only when a non-maintainer clones and runs the repository on their own machine. Do not paste credentials, usernames, private URLs, cookies, or absolute local paths.
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - Completed both oracle and calibration commands
+        - Completed the oracle command only
+        - Completed the calibration command only
+        - Installed, but a command failed
+        - Could not complete installation
+    validations:
+      required: true
+  - type: input
+    id: role
+    attributes:
+      label: Your browser-agent context
+      description: Briefly describe what you build, evaluate, study, or maintain. Do not name a private employer or project.
+      placeholder: Student evaluating Browser Use, or developer maintaining an internal browser agent
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, and CPU architecture. Do not include your username or local paths.
+      placeholder: Windows 11, Python 3.11.9, x86-64
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Tested revision
+      description: Paste the output of git rev-parse --short HEAD.
+      placeholder: 3eba547
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      description: Include the minimal commands needed to reproduce your outcome. Replace absolute paths with placeholders.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Result or safe evidence
+      description: Summarize pass counts and the detected checkpoint, or attach a redacted JSON report/error. Do not attach credentials or browser session data.
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: First point of friction
+      description: What was the first confusing, slow, or broken step?
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Would this fit an upgrade workflow?
+      description: Explain whether you would run a tool like this before changing a model, prompt, harness, or browser-agent framework.
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: One improvement you would value most
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Validation and privacy checks
+      options:
+        - label: I am not the repository maintainer and ran this on my own machine.
+          required: true
+        - label: I removed credentials, usernames, private URLs, cookies, and absolute local paths.
+          required: true
