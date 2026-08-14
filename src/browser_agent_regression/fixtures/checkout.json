@@ -1,0 +1,27 @@
+{
+  "schema_version": "0.1",
+  "task_id": "checkout.basic.v1",
+  "goal": "Complete checkout with agent@example.test and express shipping.",
+  "fixture": "checkout.html",
+  "reset": "reload",
+  "variants": {
+    "clean": "Stable reference layout.",
+    "popup-overlay": "A dismissible informational overlay covers the unchanged form.",
+    "delayed-render": "The unchanged form becomes visible after a bounded delay.",
+    "layout-shift": "A promotional panel shifts the unchanged form vertically."
+  },
+  "checkpoints": [
+    {
+      "id": "checkout.email.accepted",
+      "description": "The expected email value is present."
+    },
+    {
+      "id": "checkout.shipping.selected",
+      "description": "Express shipping is selected."
+    },
+    {
+      "id": "checkout.confirmed",
+      "description": "The deterministic confirmation status is visible."
+    }
+  ]
+}

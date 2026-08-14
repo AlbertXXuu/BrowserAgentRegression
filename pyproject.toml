@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "browser-agent-regression"
+version = "0.0.0"
+description = "Regression testing for browser agents against controlled UI changes."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "Apache-2.0"
+authors = [
+  { name = "AlbertXXuu" },
+]
+keywords = [
+  "browser-agent",
+  "regression-testing",
+  "ai-agent",
+  "evaluation",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "playwright>=1.55,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4,<9",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+browser-agent-regression = "browser_agent_regression.cli:main"
+
+[tool.setuptools.package-data]
+browser_agent_regression = ["fixtures/*.html", "fixtures/*.json"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+  "browser: requires a locally installed Playwright Chromium browser",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
