@@ -1,0 +1,1253 @@
+{
+  "schema_version": "0.2",
+  "evidence_kind": "synthetic-calibration",
+  "created_at": "2026-08-14T18:42:32.067756+00:00",
+  "task_ids": [
+    "checkout.basic.v1",
+    "catalog.find-and-save.v1"
+  ],
+  "command": "calibrate",
+  "environment": {
+    "python": "3.11.0",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "playwright": "1.62.0",
+    "browser": "151.0.7922.34"
+  },
+  "fixture_sha256": {
+    "catalog.html": "66b6a147a3f15737e97fbbccd23b7462a02d787b14ababce615579d601afc54b",
+    "catalog.json": "e806ef2ac25c771bdde721cf84c7f13d1ccb0268c34e535d874614304693cc96",
+    "checkout.html": "2152b685964510143a9b2e4593a70d74b36a00d49b8248c1823de2950937b061",
+    "checkout.json": "20c09036648bf66678c05a6e470470019c7f23f11c57450a746309cf28e43d20"
+  },
+  "configuration": {
+    "runs_per_driver_task_variant": 10,
+    "tasks": [
+      "checkout.basic.v1",
+      "catalog.find-and-save.v1"
+    ],
+    "variants": [
+      "clean",
+      "popup-overlay"
+    ]
+  },
+  "summaries": [
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "runs": 10,
+      "successes": 10,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "runs": 10,
+      "successes": 0,
+      "success_rate": 0.0,
+      "failure_checkpoints": {
+        "catalog.query.applied": 10
+      }
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "runs": 10,
+      "successes": 10,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "runs": 10,
+      "successes": 10,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "runs": 10,
+      "successes": 10,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "runs": 10,
+      "successes": 0,
+      "success_rate": 0.0,
+      "failure_checkpoints": {
+        "checkout.email.accepted": 10
+      }
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "runs": 10,
+      "successes": 10,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "runs": 10,
+      "successes": 10,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    }
+  ],
+  "regressions": [
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "variant": "popup-overlay",
+      "baseline_success_rate": 1.0,
+      "candidate_success_rate": 0.0,
+      "delta": -1.0,
+      "failed_checkpoint": "catalog.query.applied",
+      "failure_checkpoint_agreement": 1.0
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "variant": "popup-overlay",
+      "baseline_success_rate": 1.0,
+      "candidate_success_rate": 0.0,
+      "delta": -1.0,
+      "failed_checkpoint": "checkout.email.accepted",
+      "failure_checkpoint_agreement": 1.0
+    }
+  ],
+  "attempts": [
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 171.707,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 106.911,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 109.069,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 91.398,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 110.331,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 88.987,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 108.631,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 104.937,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 90.526,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 90.95,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 123.039,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 122.545,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 124.257,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 125.122,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 125.138,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 133.477,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 131.683,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 121.09,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 122.667,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 123.922,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 169.813,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 173.673,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 156.852,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 175.247,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 174.877,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 161.109,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 173.575,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 175.013,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 174.743,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 156.413,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 211.675,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 192.623,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 189.609,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 190.635,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 207.938,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 206.373,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 202.966,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 206.184,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 209.415,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 203.641,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 99.654,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 111.111,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 104.596,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 93.322,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 103.033,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 109.817,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 110.6,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 117.839,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 101.108,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 92.44,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.862,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1510.321,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.446,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1509.051,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.542,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1507.62,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1507.919,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.629,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1510.248,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1509.048,
+      "checkpoints": {
+        "checkout.email.accepted": false,
+        "checkout.shipping.selected": false,
+        "checkout.confirmed": false
+      },
+      "first_failed_checkpoint": "checkout.email.accepted",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Email\") - locator resolved to <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"off\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - waiting 20ms 2 × waiting for e"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 169.129,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 170.092,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 173.99,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 173.274,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 175.924,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 183.839,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 155.277,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 150.856,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 158.766,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 169.594,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1510.204,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.507,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.3,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.517,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1507.572,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.386,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1507.499,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1510.272,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1507.982,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "popup-blind",
+      "variant": "popup-overlay",
+      "passed": false,
+      "duration_ms": 1508.15,
+      "checkpoints": {
+        "catalog.query.applied": false,
+        "catalog.product.opened": false,
+        "catalog.product.saved": false
+      },
+      "first_failed_checkpoint": "catalog.query.applied",
+      "error": "Locator.click: Timeout 1500ms exceeded. Call log: - waiting for get_by_label(\"Search products\") - locator resolved to <input id=\"query\" type=\"search\" autocomplete=\"off\" placeholder=\"Search products\"/> - attempting click action 2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <section role=\"dialog\" class=\"overlay\" aria-modal=\"true\">…</section> intercepts pointer events - retrying click action - wa"
+    }
+  ]
+}

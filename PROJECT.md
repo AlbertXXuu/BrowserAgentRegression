@@ -62,13 +62,14 @@ technical success alone is not a GO decision.
 - One real browser-agent integration after the deterministic calibration is trustworthy.
 - Two target developers who independently clone and run the project.
 
-### Current first slice
+### Current executable slice
 
-- One checkout task.
-- All three perturbation classes on that task.
+- Two tasks: checkout and catalog find-and-save.
+- All three perturbation classes on both tasks.
 - A deterministic reference oracle.
 - A deliberately degraded calibration candidate.
-- CLI commands for serving, oracle stability runs, and paired calibration.
+- CLI commands for serving, selecting tasks, oracle stability runs, and paired calibration.
+- Evidence schema `0.2`, which adds task identity to attempts, summaries, and regressions.
 
 The calibration drivers are controls for the harness. They are not evidence about the quality
 of any model or browser-agent framework.

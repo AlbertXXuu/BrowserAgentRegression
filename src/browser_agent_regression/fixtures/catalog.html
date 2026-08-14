@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Product catalog fixture</title>
+    <style>
+      :root { color-scheme: light; font-family: Arial, sans-serif; color: #172033; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f4f7fb; }
+      main { width: min(92%, 720px); margin: 56px auto; }
+      h1, h2 { margin-bottom: 8px; }
+      p { color: #536078; }
+      form, article, [aria-label="Product details"], .promotion {
+        padding: 22px; border: 1px solid #dce3ee; border-radius: 14px; background: white;
+        box-shadow: 0 10px 30px rgb(15 23 42 / 7%);
+      }
+      form { display: flex; gap: 10px; }
+      label { position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip: rect(0 0 0 0); white-space: nowrap; }
+      input, button { min-height: 44px; padding: 10px 12px; border: 1px solid #aeb9ca;
+        border-radius: 8px; font: inherit; }
+      input { flex: 1; }
+      button { border: 0; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
+      #results { display: grid; gap: 12px; margin-top: 18px; }
+      article { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+      article h2, article p { margin: 0; }
+      [aria-label="Product details"] { margin-top: 18px; }
+      [role="status"] { margin-top: 14px; color: #17653a; font-weight: 700; }
+      [hidden] { display: none !important; }
+      .overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
+        padding: 24px; background: rgb(15 23 42 / 58%); }
+      .dialog { width: min(92%, 420px); padding: 26px; border-radius: 14px; background: white; }
+      .promotion { min-height: 150px; margin-bottom: 18px; background: #eef4ff; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Product catalog</h1>
+      <p>Find the requested product and save it to your shortlist.</p>
+      <section id="workspace">
+        <form role="search">
+          <label for="query">Search products</label>
+          <input id="query" type="search" autocomplete="off" placeholder="Search products">
+          <button type="submit">Search catalog</button>
+        </form>
+        <div id="result-status" role="status" aria-live="polite"></div>
+        <section id="results" aria-label="Search results" hidden>
+          <article data-search="desk lamp lighting">
+            <div><h2>Harbor Desk Lamp</h2><p>$48</p></div>
+            <button type="button" aria-label="View Harbor Desk Lamp"
+              data-product="Harbor Desk Lamp" data-description="Adjustable task lighting.">View</button>
+          </article>
+          <article data-search="trail camera outdoor camera wildlife">
+            <div><h2>Northstar Trail Camera</h2><p>$129</p></div>
+            <button type="button" aria-label="View Northstar Trail Camera"
+              data-product="Northstar Trail Camera"
+              data-description="Weather-resistant wildlife camera with night capture.">View</button>
+          </article>
+          <article data-search="travel mug kitchen">
+            <div><h2>Summit Travel Mug</h2><p>$24</p></div>
+            <button type="button" aria-label="View Summit Travel Mug"
+              data-product="Summit Travel Mug" data-description="Insulated stainless steel mug.">View</button>
+          </article>
+        </section>
+        <section aria-label="Product details" hidden>
+          <h2 id="detail-name"></h2>
+          <p id="detail-description"></p>
+          <button id="save-product" type="button">Save to shortlist</button>
+          <div id="saved-status" role="status" hidden></div>
+        </section>
+      </section>
+    </main>
+    <script>
+      const variant = new URLSearchParams(window.location.search).get("variant") || "clean";
+      const workspace = document.querySelector("#workspace");
+      const form = document.querySelector("form");
+      const results = document.querySelector("#results");
+      const cards = [...results.querySelectorAll("article")];
+      const details = document.querySelector('[aria-label="Product details"]');
+
+      if (variant === "popup-overlay") {
+        const overlay = document.createElement("section");
+        overlay.className = "overlay";
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.innerHTML = `
+          <div class="dialog">
+            <h2>Catalog notice</h2>
+            <p>Shortlists are stored only for this local fixture session.</p>
+            <button type="button">Continue to catalog</button>
+          </div>`;
+        overlay.querySelector("button").addEventListener("click", () => overlay.remove());
+        document.body.append(overlay);
+      }
+
+      if (variant === "delayed-render") {
+        workspace.hidden = true;
+        window.setTimeout(() => { workspace.hidden = false; }, 400);
+      }
+
+      if (variant === "layout-shift") {
+        window.setTimeout(() => {
+          const promotion = document.createElement("aside");
+          promotion.className = "promotion";
+          promotion.innerHTML = "<strong>Field notes</strong><p>Outdoor products are unchanged.</p>";
+          workspace.before(promotion);
+        }, 80);
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const query = document.querySelector("#query").value.trim().toLowerCase();
+        let matches = 0;
+        for (const card of cards) {
+          const matched = query.length > 0 && card.dataset.search.includes(query);
+          card.hidden = !matched;
+          matches += Number(matched);
+        }
+        results.hidden = false;
+        document.querySelector("#result-status").textContent =
+          `${matches} product${matches === 1 ? "" : "s"} found`;
+      });
+
+      for (const button of results.querySelectorAll("button")) {
+        button.addEventListener("click", () => {
+          const product = button.dataset.product;
+          details.dataset.product = product;
+          document.querySelector("#detail-name").textContent = product;
+          document.querySelector("#detail-description").textContent = button.dataset.description;
+          document.querySelector("#save-product").setAttribute("aria-label", `Save ${product}`);
+          document.querySelector("#saved-status").hidden = true;
+          details.hidden = false;
+        });
+      }
+
+      details.querySelector("button").addEventListener("click", () => {
+        const savedStatus = document.querySelector("#saved-status");
+        savedStatus.textContent = `${details.dataset.product} saved to shortlist`;
+        savedStatus.hidden = false;
+      });
+    </script>
+  </body>
+</html>

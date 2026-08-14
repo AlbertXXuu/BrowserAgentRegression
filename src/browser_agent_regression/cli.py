@@ -9,18 +9,25 @@ from typing import cast
 from playwright.sync_api import sync_playwright
 
 from browser_agent_regression.runner import (
+    TASK_FIXTURES,
+    TASKS,
     VARIANTS,
     Attempt,
     Driver,
+    TaskId,
     Variant,
     build_report,
-    run_checkout_attempt,
+    run_attempt,
 )
 from browser_agent_regression.server import FixtureServer
 
 
 def _variants(values: list[str] | None) -> list[Variant]:
-    return cast(list[Variant], values or list(VARIANTS))
+    return cast(list[Variant], list(dict.fromkeys(values or VARIANTS)))
+
+
+def _tasks(values: list[str] | None) -> list[TaskId]:
+    return cast(list[TaskId], list(dict.fromkeys(values or TASKS)))
 
 
 def _write_report(report: dict[str, object], output: Path | None) -> None:
@@ -36,6 +43,7 @@ def _write_report(report: dict[str, object], output: Path | None) -> None:
 def _run_matrix(
     *,
     drivers: list[Driver],
+    tasks: list[TaskId],
     variants: list[Variant],
     runs: int,
     headed: bool,
@@ -46,30 +54,38 @@ def _run_matrix(
         browser_version = browser.version
         try:
             for driver in drivers:
-                for variant in variants:
-                    for _ in range(runs):
-                        attempts.append(
-                            run_checkout_attempt(
-                                browser,
-                                server,
-                                driver=driver,
-                                variant=variant,
+                for task_id in tasks:
+                    for variant in variants:
+                        for _ in range(runs):
+                            attempts.append(
+                                run_attempt(
+                                    browser,
+                                    server,
+                                    task_id=task_id,
+                                    driver=driver,
+                                    variant=variant,
+                                )
                             )
-                        )
         finally:
             browser.close()
     return attempts, browser_version
 
 
 def _oracle(args: argparse.Namespace) -> int:
+    tasks = _tasks(args.task)
     variants = _variants(args.variant)
     attempts, browser_version = _run_matrix(
-        drivers=["reference"], variants=variants, runs=args.runs, headed=args.headed
+        drivers=["reference"],
+        tasks=tasks,
+        variants=variants,
+        runs=args.runs,
+        headed=args.headed,
     )
     report = build_report(
         attempts,
         command="oracle",
         runs=args.runs,
+        tasks=tasks,
         variants=variants,
         browser_version=browser_version,
     )
@@ -78,9 +94,11 @@ def _oracle(args: argparse.Namespace) -> int:
 
 
 def _calibrate(args: argparse.Namespace) -> int:
+    tasks = _tasks(args.task)
     variants = _variants(args.variant or ["clean", "popup-overlay"])
     attempts, browser_version = _run_matrix(
         drivers=["reference", "popup-blind"],
+        tasks=tasks,
         variants=variants,
         runs=args.runs,
         headed=args.headed,
@@ -89,18 +107,20 @@ def _calibrate(args: argparse.Namespace) -> int:
         attempts,
         command="calibrate",
         runs=args.runs,
+        tasks=tasks,
         variants=variants,
         browser_version=browser_version,
     )
     _write_report(report, args.output)
 
     summaries = {
-        (summary["driver"], summary["variant"]): summary
+        (summary["task_id"], summary["driver"], summary["variant"]): summary
         for summary in report["summaries"]
     }
-    clean_parity = (
-        summaries[("reference", "clean")]["success_rate"]
-        == summaries[("popup-blind", "clean")]["success_rate"]
+    clean_parity = all(
+        summaries[(task_id, "reference", "clean")]["success_rate"]
+        == summaries[(task_id, "popup-blind", "clean")]["success_rate"]
+        for task_id in tasks
     )
     target_regression = any(
         regression["variant"] == "popup-overlay"
@@ -115,8 +135,12 @@ def _calibrate(args: argparse.Namespace) -> int:
 def _serve(args: argparse.Namespace) -> int:
     with FixtureServer(port=args.port) as server:
         print("Fixture server is ready. Press Ctrl+C to stop.")
-        for variant in VARIANTS:
-            print(f"{variant:16} {server.url('checkout.html', variant=variant)}")
+        for task_id in TASKS:
+            for variant in VARIANTS:
+                print(
+                    f"{task_id:26} {variant:16} "
+                    f"{server.url(TASK_FIXTURES[task_id], variant=variant)}"
+                )
         try:
             Event().wait()
         except KeyboardInterrupt:
@@ -126,6 +150,7 @@ def _serve(args: argparse.Namespace) -> int:
 
 def _add_run_arguments(parser: argparse.ArgumentParser, *, default_runs: int) -> None:
     parser.add_argument("--runs", type=int, default=default_runs)
+    parser.add_argument("--task", action="append", choices=TASKS)
     parser.add_argument("--variant", action="append", choices=VARIANTS)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--headed", action="store_true")
@@ -159,4 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if getattr(args, "runs", 1) < 1:
         parser.error("--runs must be at least 1")
+    if args.command == "calibrate" and args.variant is not None:
+        required_variants = {"clean", "popup-overlay"}
+        if not required_variants.issubset(args.variant):
+            parser.error("calibrate --variant must include clean and popup-overlay")
     return int(args.handler(args))
