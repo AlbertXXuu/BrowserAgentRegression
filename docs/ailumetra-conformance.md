@@ -9,10 +9,10 @@
 | Functional identity is primary | Pass | README, repository, package, import, and CLI use Browser Agent Regression names |
 | Shared Ailumetra identity | Pass | Outlined wordmark with project-specific `AGENT RELIABILITY` signal |
 | Research boundary | Pass | Agent-system reliability is the frame; browser is the only Phase 0 environment |
-| Public README contract | Pass locally | English/Chinese READMEs, status, calibration evidence, limitations, quick start |
+| Public README contract | Pass | English/Chinese READMEs, status, calibration evidence, limitations, quick start |
 | Evidence contract | Pass for E0 | Attempt-level JSON, fixture hashes, environment, retained failures, synthetic label |
-| Repository baseline | Pass locally | License/font notice, contributing/security routes, lint, tests, package and wheel smoke |
-| Remote public validation | Pending | GitHub repository and remote CI do not exist yet |
+| Repository baseline | Pass | License/font notice, contributing/security routes, lint, tests, package and wheel smoke |
+| Remote repository and CI | Pass | Public GitHub repository exists and the first Linux CI run completed successfully |
 | Three-task Phase 0 matrix | Pending | One of three tasks is implemented |
 | Real-agent feasibility | Pending | No real Browser Use adapter run is preserved yet |
 | Independent adoption | Pending | Two non-author clone-and-run reports are required |
