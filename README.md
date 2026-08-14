@@ -17,11 +17,11 @@ A local-first experiment for answering one practical question: **did a browser-a
 improve reliability, or did it quietly break a workflow that used to pass?**
 
 The project is in a **5–7 day Phase 0 validation**. It is not yet a general-purpose framework.
-The first executable slice provides a deterministic checkout fixture, controlled
+The current executable slice provides deterministic checkout and catalog fixtures, controlled
 semantic-preserving UI perturbations, checkpoint-level scoring, repeated runs, and a JSON
 regression report.
 
-> Status: one of three required tasks is implemented. Phase 0 is a **GO only if all technical
+> Status: two of three required tasks are implemented. Phase 0 is a **GO only if all technical
 > and user-validation gates in [PROJECT.md](PROJECT.md) pass**. Until then, the repository
 > should be read as a falsifiable project hypothesis, not a finished product.
 
@@ -30,21 +30,25 @@ without expanding the Phase 0 scope.
 
 ## Phase 0 calibration evidence
 
-The first slice was run locally from one source snapshot. The deterministic reference oracle
-completed 30/30 repetitions under every current condition:
+The second slice was run locally from one source snapshot. The deterministic reference oracle
+completed 30/30 repetitions for both tasks under every current condition:
 
-| Condition | Reference oracle | Calibration baseline | Calibration candidate |
-|---|---:|---:|---:|
-| `clean` | 30/30 | 10/10 | 10/10 |
-| `popup-overlay` | 30/30 | 10/10 | **0/10** |
-| `delayed-render` | 30/30 | — | — |
-| `layout-shift` | 30/30 | — | — |
+| Task | Condition | Reference oracle | Calibration baseline | Calibration candidate |
+|---|---|---:|---:|---:|
+| `checkout.basic.v1` | `clean` | 30/30 | 10/10 | 10/10 |
+| `checkout.basic.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
+| `checkout.basic.v1` | `delayed-render` | 30/30 | — | — |
+| `checkout.basic.v1` | `layout-shift` | 30/30 | — | — |
+| `catalog.find-and-save.v1` | `clean` | 30/30 | 10/10 | 10/10 |
+| `catalog.find-and-save.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
+| `catalog.find-and-save.v1` | `delayed-render` | 30/30 | — | — |
+| `catalog.find-and-save.v1` | `layout-shift` | 30/30 | — | — |
 
-The intentionally popup-blind candidate preserved clean performance but regressed by 100
-percentage points under the overlay. All ten failures localized first to
-`checkout.email.accepted`. Inspect the preserved
-[oracle evidence](docs/evidence/phase0-slice-01-oracle.json) and
-[calibration evidence](docs/evidence/phase0-slice-01-calibration.json).
+The intentionally popup-blind candidate preserved clean performance on both tasks but regressed
+by 100 percentage points under the overlay. All failures localized first to the expected
+task-specific checkpoint: `checkout.email.accepted` or `catalog.query.applied`. Inspect the
+preserved [oracle evidence](docs/evidence/phase0-slice-02-oracle.json) and
+[calibration evidence](docs/evidence/phase0-slice-02-calibration.json).
 
 These are **synthetic harness-calibration results**, not model or browser-agent benchmark
 scores. Their purpose is to prove fixture stability and regression sensitivity before a real
@@ -61,7 +65,7 @@ platform is built.
 
 ## Current executable slice
 
-The included checkout task has four conditions:
+The included checkout and catalog find-and-save tasks each have four conditions:
 
 - `clean`
 - `popup-overlay`
@@ -93,6 +97,12 @@ Verify that the fixture and oracle are stable:
 
 ```bash
 browser-agent-regression oracle --runs 30
+```
+
+Run only one task when diagnosing a fixture:
+
+```bash
+browser-agent-regression oracle --task catalog.find-and-save.v1 --runs 3
 ```
 
 Run the synthetic regression calibration:

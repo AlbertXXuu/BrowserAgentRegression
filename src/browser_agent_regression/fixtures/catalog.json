@@ -1,0 +1,27 @@
+{
+  "schema_version": "0.1",
+  "task_id": "catalog.find-and-save.v1",
+  "goal": "Find the Northstar Trail Camera and save it to the shortlist.",
+  "fixture": "catalog.html",
+  "reset": "reload",
+  "variants": {
+    "clean": "Stable reference layout.",
+    "popup-overlay": "A dismissible informational overlay covers the unchanged catalog.",
+    "delayed-render": "The unchanged catalog becomes visible after a bounded delay.",
+    "layout-shift": "A promotional panel shifts the unchanged catalog vertically."
+  },
+  "checkpoints": [
+    {
+      "id": "catalog.query.applied",
+      "description": "The requested search leaves exactly one matching product."
+    },
+    {
+      "id": "catalog.product.opened",
+      "description": "The Northstar Trail Camera detail region is visible."
+    },
+    {
+      "id": "catalog.product.saved",
+      "description": "The expected product is saved to the shortlist."
+    }
+  ]
+}

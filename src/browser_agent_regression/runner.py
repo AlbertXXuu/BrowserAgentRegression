@@ -10,13 +10,14 @@ from platform import platform, python_version
 from time import perf_counter
 from typing import Any, Literal
 
-from playwright.sync_api import Browser
+from playwright.sync_api import Browser, Page
 from playwright.sync_api import Error as PlaywrightError
 
 from browser_agent_regression.server import FixtureServer
 
 Variant = Literal["clean", "popup-overlay", "delayed-render", "layout-shift"]
 Driver = Literal["reference", "popup-blind"]
+TaskId = Literal["checkout.basic.v1", "catalog.find-and-save.v1"]
 
 VARIANTS: tuple[Variant, ...] = (
     "clean",
@@ -24,15 +25,31 @@ VARIANTS: tuple[Variant, ...] = (
     "delayed-render",
     "layout-shift",
 )
-CHECKPOINTS = (
-    "checkout.email.accepted",
-    "checkout.shipping.selected",
-    "checkout.confirmed",
+TASKS: tuple[TaskId, ...] = (
+    "checkout.basic.v1",
+    "catalog.find-and-save.v1",
 )
+TASK_FIXTURES: dict[TaskId, str] = {
+    "checkout.basic.v1": "checkout.html",
+    "catalog.find-and-save.v1": "catalog.html",
+}
+TASK_CHECKPOINTS: dict[TaskId, tuple[str, ...]] = {
+    "checkout.basic.v1": (
+        "checkout.email.accepted",
+        "checkout.shipping.selected",
+        "checkout.confirmed",
+    ),
+    "catalog.find-and-save.v1": (
+        "catalog.query.applied",
+        "catalog.product.opened",
+        "catalog.product.saved",
+    ),
+}
 
 
 @dataclass(frozen=True)
 class Attempt:
+    task_id: TaskId
     driver: Driver
     variant: Variant
     passed: bool
@@ -47,41 +64,75 @@ def _bounded_error(error: Exception) -> str:
     return message[:500]
 
 
-def run_checkout_attempt(
+def _complete_checkout(page: Page, checkpoints: dict[str, bool]) -> None:
+    email = page.get_by_label("Email")
+    email.click()
+    email.fill("agent@example.test")
+    checkpoints["checkout.email.accepted"] = email.input_value() == "agent@example.test"
+
+    shipping = page.get_by_label("Shipping")
+    shipping.select_option("express")
+    checkpoints["checkout.shipping.selected"] = shipping.input_value() == "express"
+
+    page.get_by_role("button", name="Complete purchase").click()
+    confirmation = page.get_by_role("status")
+    confirmation.wait_for(state="visible")
+    checkpoints["checkout.confirmed"] = confirmation.text_content() == "Order confirmed"
+
+
+def _complete_catalog(page: Page, checkpoints: dict[str, bool]) -> None:
+    search = page.get_by_label("Search products")
+    search.click()
+    search.fill("trail camera")
+    page.get_by_role("button", name="Search catalog").click()
+    result_status = page.locator("#result-status")
+    checkpoints["catalog.query.applied"] = result_status.text_content() == "1 product found"
+
+    page.get_by_role("button", name="View Northstar Trail Camera").click()
+    details = page.get_by_role("region", name="Product details")
+    details.wait_for(state="visible")
+    checkpoints["catalog.product.opened"] = (
+        details.get_by_role("heading").text_content() == "Northstar Trail Camera"
+    )
+
+    page.get_by_role("button", name="Save Northstar Trail Camera").click()
+    saved_status = page.locator("#saved-status")
+    saved_status.wait_for(state="visible")
+    checkpoints["catalog.product.saved"] = (
+        saved_status.text_content() == "Northstar Trail Camera saved to shortlist"
+    )
+
+
+def run_attempt(
     browser: Browser,
     server: FixtureServer,
     *,
+    task_id: TaskId,
     driver: Driver,
     variant: Variant,
     timeout_ms: int = 1_500,
 ) -> Attempt:
-    """Run one isolated calibration attempt and preserve checkpoint evidence."""
+    """Run one isolated task attempt and preserve checkpoint evidence."""
 
     page = browser.new_page()
     page.set_default_timeout(timeout_ms)
-    checkpoints = dict.fromkeys(CHECKPOINTS, False)
+    checkpoints = dict.fromkeys(TASK_CHECKPOINTS[task_id], False)
     started = perf_counter()
     error: str | None = None
 
     try:
-        page.goto(server.url("checkout.html", variant=variant), wait_until="domcontentloaded")
+        page.goto(
+            server.url(TASK_FIXTURES[task_id], variant=variant),
+            wait_until="domcontentloaded",
+        )
 
         if driver == "reference" and variant == "popup-overlay":
-            page.get_by_role("button", name="Continue to checkout").click()
+            page.get_by_role("dialog").get_by_role("button").click()
 
-        email = page.get_by_label("Email")
-        email.click()
-        email.fill("agent@example.test")
-        checkpoints["checkout.email.accepted"] = email.input_value() == "agent@example.test"
-
-        shipping = page.get_by_label("Shipping")
-        shipping.select_option("express")
-        checkpoints["checkout.shipping.selected"] = shipping.input_value() == "express"
-
-        page.get_by_role("button", name="Complete purchase").click()
-        confirmation = page.get_by_role("status")
-        confirmation.wait_for(state="visible")
-        checkpoints["checkout.confirmed"] = confirmation.text_content() == "Order confirmed"
+        if task_id == "checkout.basic.v1":
+            _complete_checkout(page, checkpoints)
+        else:
+            _complete_catalog(page, checkpoints)
     except PlaywrightError as exc:
         error = _bounded_error(exc)
     finally:
@@ -90,6 +141,7 @@ def run_checkout_attempt(
 
     first_failed = next((name for name, passed in checkpoints.items() if not passed), None)
     return Attempt(
+        task_id=task_id,
         driver=driver,
         variant=variant,
         passed=first_failed is None and error is None,
@@ -102,12 +154,14 @@ def run_checkout_attempt(
 
 def summarize(attempts: list[Attempt]) -> list[dict[str, Any]]:
     summaries: list[dict[str, Any]] = []
-    groups = sorted({(attempt.driver, attempt.variant) for attempt in attempts})
-    for driver, variant in groups:
+    groups = sorted({(attempt.task_id, attempt.driver, attempt.variant) for attempt in attempts})
+    for task_id, driver, variant in groups:
         group = [
             attempt
             for attempt in attempts
-            if attempt.driver == driver and attempt.variant == variant
+            if attempt.task_id == task_id
+            and attempt.driver == driver
+            and attempt.variant == variant
         ]
         successes = sum(attempt.passed for attempt in group)
         failures = Counter(
@@ -117,6 +171,7 @@ def summarize(attempts: list[Attempt]) -> list[dict[str, Any]]:
         )
         summaries.append(
             {
+                "task_id": task_id,
                 "driver": driver,
                 "variant": variant,
                 "runs": len(group),
@@ -134,16 +189,18 @@ def find_regressions(
     baseline: Driver = "reference",
     candidate: Driver = "popup-blind",
 ) -> list[dict[str, Any]]:
-    indexed = {(item["driver"], item["variant"]): item for item in summaries}
-    variants = sorted(
-        variant
-        for driver, variant in indexed
-        if driver == baseline and (candidate, variant) in indexed
+    indexed = {
+        (item["task_id"], item["driver"], item["variant"]): item for item in summaries
+    }
+    conditions = sorted(
+        (task_id, variant)
+        for task_id, driver, variant in indexed
+        if driver == baseline and (task_id, candidate, variant) in indexed
     )
     regressions: list[dict[str, Any]] = []
-    for variant in variants:
-        baseline_item = indexed[(baseline, variant)]
-        candidate_item = indexed[(candidate, variant)]
+    for task_id, variant in conditions:
+        baseline_item = indexed[(task_id, baseline, variant)]
+        candidate_item = indexed[(task_id, candidate, variant)]
         delta = candidate_item["success_rate"] - baseline_item["success_rate"]
         if delta < 0:
             failure_counts = candidate_item["failure_checkpoints"]
@@ -158,6 +215,7 @@ def find_regressions(
             )
             regressions.append(
                 {
+                    "task_id": task_id,
                     "variant": variant,
                     "baseline_success_rate": baseline_item["success_rate"],
                     "candidate_success_rate": candidate_item["success_rate"],
@@ -174,21 +232,30 @@ def build_report(
     *,
     command: str,
     runs: int,
+    tasks: list[TaskId],
     variants: list[Variant],
     browser_version: str | None = None,
 ) -> dict[str, Any]:
     summaries = summarize(attempts)
     regressions = find_regressions(summaries) if command == "calibrate" else []
     fixture_directory = Path(__file__).with_name("fixtures")
+    fixture_names = {
+        name
+        for task_id in tasks
+        for name in (
+            TASK_FIXTURES[task_id],
+            Path(TASK_FIXTURES[task_id]).with_suffix(".json").name,
+        )
+    }
     fixture_hashes = {
         name: sha256((fixture_directory / name).read_bytes()).hexdigest()
-        for name in ("checkout.html", "checkout.json")
+        for name in sorted(fixture_names)
     }
     return {
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "evidence_kind": "synthetic-calibration",
         "created_at": datetime.now(UTC).isoformat(),
-        "task_id": "checkout.basic.v1",
+        "task_ids": tasks,
         "command": command,
         "environment": {
             "python": python_version(),
@@ -197,7 +264,11 @@ def build_report(
             "browser": browser_version,
         },
         "fixture_sha256": fixture_hashes,
-        "configuration": {"runs_per_driver_variant": runs, "variants": variants},
+        "configuration": {
+            "runs_per_driver_task_variant": runs,
+            "tasks": tasks,
+            "variants": variants,
+        },
         "summaries": summaries,
         "regressions": regressions,
         "attempts": [asdict(attempt) for attempt in attempts],

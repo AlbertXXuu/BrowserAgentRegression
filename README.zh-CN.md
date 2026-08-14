@@ -15,10 +15,10 @@
 这是一个 local-first 实验，用来回答一个实际问题：**浏览器 Agent 更新后是真的更可靠了，
 还是悄悄破坏了原本能够完成的工作流？**
 
-项目目前处于 **5–7 天 Phase 0 验证期**，还不是通用框架。第一个可运行切片包含确定性
-结账任务、语义不变的受控 UI 扰动、检查点级评分、重复运行和 JSON 回归报告。
+项目目前处于 **5–7 天 Phase 0 验证期**，还不是通用框架。当前可运行切片包含确定性
+结账与商品查找任务、语义不变的受控 UI 扰动、检查点级评分、重复运行和 JSON 回归报告。
 
-> 当前完成了三个必需任务中的一个。只有 [PROJECT.md](PROJECT.md) 中所有技术和用户验证
+> 当前完成了三个必需任务中的两个。只有 [PROJECT.md](PROJECT.md) 中所有技术和用户验证
 > Gate 均通过，Phase 0 才是 **GO**。在此之前，这个仓库代表的是一个可证伪的项目假设，
 > 不是已经完成的产品。
 
@@ -27,20 +27,25 @@
 
 ## Phase 0 校准证据
 
-第一个切片在本地同一份源码快照上重复运行。确定性 reference Oracle 在所有当前条件下均
-完成 30/30 次：
+第二个切片在本地同一份源码快照上重复运行。确定性 reference Oracle 在两个任务的所有当前
+条件下均完成 30/30 次：
 
-| 条件 | Reference Oracle | 校准 Baseline | 校准 Candidate |
-|---|---:|---:|---:|
-| `clean` | 30/30 | 10/10 | 10/10 |
-| `popup-overlay` | 30/30 | 10/10 | **0/10** |
-| `delayed-render` | 30/30 | — | — |
-| `layout-shift` | 30/30 | — | — |
+| 任务 | 条件 | Reference Oracle | 校准 Baseline | 校准 Candidate |
+|---|---|---:|---:|---:|
+| `checkout.basic.v1` | `clean` | 30/30 | 10/10 | 10/10 |
+| `checkout.basic.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
+| `checkout.basic.v1` | `delayed-render` | 30/30 | — | — |
+| `checkout.basic.v1` | `layout-shift` | 30/30 | — | — |
+| `catalog.find-and-save.v1` | `clean` | 30/30 | 10/10 | 10/10 |
+| `catalog.find-and-save.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
+| `catalog.find-and-save.v1` | `delayed-render` | 30/30 | — | — |
+| `catalog.find-and-save.v1` | `layout-shift` | 30/30 | — | — |
 
-人为设置的 popup-blind candidate 保持了 clean 条件下的成功率，但在 overlay 条件下下降
-100 个百分点；十次失败均首先定位到 `checkout.email.accepted`。可以直接检查保存的
-[Oracle 证据](docs/evidence/phase0-slice-01-oracle.json)与
-[校准证据](docs/evidence/phase0-slice-01-calibration.json)。
+人为设置的 popup-blind candidate 在两个任务的 clean 条件下保持成功率，但在 overlay
+条件下均下降 100 个百分点；所有失败均首先定位到对应任务的预期检查点：
+`checkout.email.accepted` 或 `catalog.query.applied`。可以直接检查保存的
+[Oracle 证据](docs/evidence/phase0-slice-02-oracle.json)与
+[校准证据](docs/evidence/phase0-slice-02-calibration.json)。
 
 这些是**合成 runner 校准结果**，不是模型或真实浏览器 Agent 的 benchmark 分数。它们只用来
 证明 fixture 稳定且 runner 能检测回归，然后才值得接入真实 Agent。
@@ -54,7 +59,7 @@
 
 ## 当前可运行切片
 
-内置结账任务包含四种条件：
+内置结账任务与商品查找并收藏任务都包含四种条件：
 
 - `clean`
 - `popup-overlay`
@@ -85,6 +90,12 @@ python -m playwright install chromium
 
 ```bash
 browser-agent-regression oracle --runs 30
+```
+
+诊断单个 fixture 时可以只运行一个任务：
+
+```bash
+browser-agent-regression oracle --task catalog.find-and-save.v1 --runs 3
 ```
 
 运行合成回归校准实验：

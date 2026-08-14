@@ -7,6 +7,10 @@ dashboard.
 |---|---|---|
 | `phase0-slice-01-oracle.json` | 30 reference-oracle repetitions for each of four checkout conditions | 120/120 pass |
 | `phase0-slice-01-calibration.json` | 10 baseline and candidate repetitions on clean and popup conditions | clean parity; popup regression detected |
+| `phase0-slice-02-oracle.json` | 30 reference-oracle repetitions for two tasks under four conditions | 240/240 pass |
+| `phase0-slice-02-calibration.json` | 10 baseline and candidate repetitions for two tasks on clean and popup conditions | clean parity; two popup regressions detected |
 
-Both files use evidence schema `0.1` and are labelled `synthetic-calibration`. They validate
-the harness, not the quality of a model or agent framework.
+Slice 01 uses evidence schema `0.1`. Slice 02 uses schema `0.2`, adding task identity to
+attempts, summaries, regressions, and configuration. All files are labelled
+`synthetic-calibration`: they validate the runner, not the quality of a model or agent
+framework.
