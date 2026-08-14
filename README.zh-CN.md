@@ -99,6 +99,15 @@ browser-agent-regression calibrate --runs 10 --output calibration.json
 browser-agent-regression serve
 ```
 
+## 帮助验证 Phase 0
+
+如果你正在维护、评估或学习浏览器 Agent，请在自己的电脑上 clone 仓库并运行上面的两个
+命令，然后提交
+[Phase 0 独立运行反馈](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=phase0-run.yml)。
+
+成功和受阻的报告都有价值。只有非维护者提供了测试 revision、环境、命令、安全证据和具体
+工作流反馈，才计入外部需求 Gate；Star 和页面浏览量不计入。
+
 ## 开发检查
 
 ```bash
