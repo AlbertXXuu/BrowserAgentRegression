@@ -22,6 +22,9 @@
 > Gate 均通过，Phase 0 才是 **GO**。在此之前，这个仓库代表的是一个可证伪的项目假设，
 > 不是已经完成的产品。
 
+仓库通过 [AOS-0.1 符合性记录](docs/ailumetra-conformance.md)跟踪系列标准，但不会因此
+扩大 Phase 0 范围。
+
 ## Phase 0 校准证据
 
 第一个切片在本地同一份源码快照上重复运行。确定性 reference Oracle 在所有当前条件下均

@@ -25,6 +25,9 @@ regression report.
 > and user-validation gates in [PROJECT.md](PROJECT.md) pass**. Until then, the repository
 > should be read as a falsifiable project hypothesis, not a finished product.
 
+The repository tracks Ailumetra [AOS-0.1 conformance](docs/ailumetra-conformance.md)
+without expanding the Phase 0 scope.
+
 ## Phase 0 calibration evidence
 
 The first slice was run locally from one source snapshot. The deterministic reference oracle

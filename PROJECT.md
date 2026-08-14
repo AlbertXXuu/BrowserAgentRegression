@@ -18,7 +18,8 @@ This is not a commitment to build a platform. Phase 0 exists to test two assumpt
 ## 2. Target user and job
 
 The initial target user is a developer who maintains or upgrades a browser agent and needs to
-decide whether a model, prompt, framework, or policy change is safe to merge.
+decide whether a model, harness, prompt, tool schema, framework, or policy change is safe to
+merge.
 
 Their job is:
 
@@ -29,6 +30,17 @@ Phase 0 does not claim that this is already a validated market. External runs ar
 gate precisely because current evidence is insufficient.
 
 ## 3. Product hypothesis
+
+The longer-term research object is **agent-system regression**:
+
+```text
+agent system = model + harness + tools + environment
+```
+
+Browser is the first controlled environment, not a claim that the project already evaluates
+every kind of agent system. During Phase 0, `reference` and `popup-blind` remain explicitly
+synthetic calibration drivers. A generic model/harness/prompt/tool run identity is deferred
+until one real integration and external users demonstrate which fields are actually required.
 
 Given deterministic local tasks and semantic-preserving UI perturbations, a small repeated-run
 harness can reveal browser-agent regressions more reliably than one-off demos and with less
@@ -68,6 +80,7 @@ Phase 0 will not include:
 - a hosted service, dashboard, account system, database, or telemetry pipeline;
 - a new browser agent, autonomous planner, or model-training code;
 - a plugin marketplace or speculative universal adapter API;
+- a universal harness benchmark or a generic agent-system ontology;
 - production trace replay, video analysis, or chain-of-thought capture;
 - a leaderboard or claims of broad agent ranking;
 - arbitrary websites whose state cannot be reset deterministically;
@@ -148,8 +161,8 @@ integration will reveal the minimum boundary based on evidence rather than predi
 ## 9. Evidence policy
 
 - Generated reports include a schema version and explicit configuration.
-- Synthetic calibration results are labelled `synthetic`; model results must name the agent,
-  model, configuration, date, and run count.
+- Synthetic calibration results are labelled `synthetic`; real results must name the agent,
+  model, harness, prompt/tool configuration when relevant, date, and run count.
 - No result is described as a benchmark unless the task set and methodology justify that word.
 - Failures and instability remain visible; unsuccessful experiments are not deleted from the
   project record.
@@ -160,6 +173,8 @@ integration will reveal the minimum boundary based on evidence rather than predi
 - Repository: `BrowserAgentRegression`.
 - Python distribution and CLI: `browser-agent-regression`.
 - Series attribution: **Ailumetra**, secondary only.
+- Series standard: **AOS-0.1**, tracked in
+  [`docs/ailumetra-conformance.md`](docs/ailumetra-conformance.md).
 
 This lets developers discover the repository by its function while preserving the option for
 Ailumetra to become a future studio or open-source series.
