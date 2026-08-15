@@ -13,6 +13,8 @@ dashboard.
 | `phase0-slice-03-calibration.json` | 10 baseline and candidate repetitions for three tasks on clean and popup conditions | clean parity; three popup regressions detected |
 | `phase0-deepseek-smoke.json` | First authenticated Browser Use + DeepSeek smoke run on revision `219bcbb` | 0/1; provider request compatibility failure retained |
 | `phase0-deepseek-smoke-01.md` | Diagnosis and correction record for the first authenticated run | DeepSeek thinking/tool-choice conflict documented |
+| `phase0-deepseek-smoke-02.json` | Second authenticated smoke run on revision `e5b812c` | Agent completed the task; invalid 0/1 score retained as scorer-lifecycle evidence |
+| `phase0-deepseek-smoke-02.md` | Diagnosis and correction record for the second authenticated run | Browser lifetime false negative documented |
 
 Slice 01 uses evidence schema `0.1`. Slices 02 and 03 use schema `0.2`, adding task identity
 to attempts, summaries, regressions, and configuration. All files are labelled

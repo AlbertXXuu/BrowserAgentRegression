@@ -85,6 +85,18 @@ def _bounded_message(
     return message[:500]
 
 
+def _scoring_failure_message(
+    scoring_error: BaseException,
+    history_errors: list[str],
+    *,
+    api_key: str,
+) -> str:
+    message = f"Independent checkpoint scoring failed: {scoring_error}"
+    if history_errors:
+        message += f"; last agent error: {history_errors[-1]}"
+    return _bounded_message(message, secrets=(api_key,))
+
+
 def _task_goal(task_id: TaskId) -> str:
     manifest_name = Path(TASK_FIXTURES[task_id]).with_suffix(".json")
     manifest = json.loads((_FIXTURE_DIRECTORY / manifest_name).read_text(encoding="utf-8"))
@@ -130,7 +142,9 @@ async def _run_attempt(
         headless=not headed,
         allowed_domains=["http://127.0.0.1"],
         enable_default_extensions=False,
-        keep_alive=False,
+        # Agent.run() closes non-keep-alive sessions before returning. Keep the
+        # page alive for independent scoring, then force-kill it in finally.
+        keep_alive=True,
     )
     checkpoints = dict.fromkeys(TASK_CHECKPOINTS[task_id], False)
     started = perf_counter()
@@ -171,10 +185,11 @@ async def _run_attempt(
         try:
             checkpoints = await _score_page(page, task_id)
         except Exception as scoring_error:
-            retained_error: BaseException | str = (
-                history_errors[-1] if history_errors else scoring_error
+            error = _scoring_failure_message(
+                scoring_error,
+                history_errors,
+                api_key=api_key,
             )
-            error = _bounded_message(retained_error, secrets=(api_key,))
 
         if not all(checkpoints.values()) and history_errors and error is None:
             error = _bounded_message(history_errors[-1], secrets=(api_key,))
@@ -244,6 +259,7 @@ def deepseek_run_identity(*, model: str, max_steps: int) -> dict[str, object]:
         "max_actions_per_step": 3,
         "prompt_strategy": "manifest goal with current-tab and visible-confirmation constraints",
         "tools": "browser-use default browser tools",
+        "browser_lifecycle": "keep alive through independent scoring; force-kill after attempt",
         "browser_use_telemetry": False,
         "credential_input": "environment or hidden interactive prompt",
     }

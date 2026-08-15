@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from browser_agent_regression.browser_use_deepseek import (
     _bounded_message,
     _NonThinkingClient,
+    _scoring_failure_message,
 )
 
 
@@ -44,3 +45,18 @@ def test_non_thinking_client_injects_disabled_thinking_mode() -> None:
         "existing": True,
         "thinking": {"type": "disabled"},
     }
+
+
+def test_scoring_failure_retains_oracle_and_agent_errors_without_key() -> None:
+    secret = "sk-example-secret"
+
+    message = _scoring_failure_message(
+        RuntimeError(f"page closed while using {secret}"),
+        ["model returned malformed AgentOutput"],
+        api_key=secret,
+    )
+
+    assert message.startswith("Independent checkpoint scoring failed:")
+    assert "last agent error: model returned malformed AgentOutput" in message
+    assert secret not in message
+    assert "[REDACTED]" in message
