@@ -73,6 +73,26 @@ class _NonThinkingClient:
         return getattr(self._client, name)
 
 
+async def _deepseek_json_output_completion(
+    client: Any,
+    *,
+    model: str,
+    messages: list[dict[str, Any]],
+    output_format: type[Any],
+    request_options: dict[str, Any],
+) -> Any:
+    response = await client.chat.completions.create(
+        model=model,
+        messages=messages,
+        response_format={"type": "json_object"},
+        **request_options,
+    )
+    content = response.choices[0].message.content
+    if not content:
+        raise ValueError("DeepSeek returned empty JSON output.")
+    return output_format.model_validate_json(content)
+
+
 def _bounded_message(
     error: BaseException | str,
     *,
@@ -128,14 +148,69 @@ async def _run_attempt(
     try:
         from browser_use import Agent, Browser
         from browser_use.llm import ChatDeepSeek
+        from browser_use.llm.deepseek.serializer import DeepSeekMessageSerializer
+        from browser_use.llm.exceptions import ModelProviderError, ModelRateLimitError
+        from browser_use.llm.views import ChatInvokeCompletion
+        from openai import (
+            APIConnectionError,
+            APIError,
+            APIStatusError,
+            APITimeoutError,
+            RateLimitError,
+        )
     except ImportError as exc:
         raise RuntimeError(
             'Browser Use is not installed. Run: python -m pip install -e ".[agent]"'
         ) from exc
 
-    class NonThinkingChatDeepSeek(ChatDeepSeek):
+    class JsonOutputChatDeepSeek(ChatDeepSeek):
         def _client(self) -> Any:
             return _NonThinkingClient(super()._client())
+
+        async def ainvoke(
+            self,
+            messages: list[Any],
+            output_format: type[Any] | None = None,
+            tools: list[dict[str, Any]] | None = None,
+            stop: list[str] | None = None,
+            **kwargs: Any,
+        ) -> Any:
+            if output_format is None or tools:
+                return await super().ainvoke(
+                    messages,
+                    output_format=output_format,
+                    tools=tools,
+                    stop=stop,
+                    **kwargs,
+                )
+
+            serialized = DeepSeekMessageSerializer.serialize_messages(messages)
+            request_options = {
+                name: value
+                for name in ("temperature", "max_tokens", "top_p", "seed")
+                if (value := getattr(self, name)) is not None
+            }
+            if self.base_url and str(self.base_url).endswith("/beta"):
+                if serialized and serialized[-1].get("role") == "assistant":
+                    serialized[-1]["prefix"] = True
+                if stop:
+                    request_options["stop"] = stop
+
+            try:
+                parsed = await _deepseek_json_output_completion(
+                    self._client(),
+                    model=self.model,
+                    messages=serialized,
+                    output_format=output_format,
+                    request_options=request_options,
+                )
+                return ChatInvokeCompletion(completion=parsed, usage=None)
+            except RateLimitError as exc:
+                raise ModelRateLimitError(str(exc), model=self.name) from exc
+            except (APIError, APIConnectionError, APITimeoutError, APIStatusError) as exc:
+                raise ModelProviderError(str(exc), model=self.name) from exc
+            except Exception as exc:
+                raise ModelProviderError(str(exc), model=self.name) from exc
 
     driver = cast(Driver, f"browser-use/{model}")
     browser = Browser(
@@ -156,7 +231,7 @@ async def _run_attempt(
         await page.goto(server.url(TASK_FIXTURES[task_id], variant=variant))
         await asyncio.sleep(0.25)
 
-        llm = NonThinkingChatDeepSeek(
+        llm = JsonOutputChatDeepSeek(
             model=model,
             api_key=api_key,
             base_url="https://api.deepseek.com",
@@ -255,6 +330,7 @@ def deepseek_run_identity(*, model: str, max_steps: int, headed: bool) -> dict[s
         "use_judge": False,
         "temperature": 0.0,
         "thinking": "disabled",
+        "agent_output_transport": "DeepSeek JSON Output with Pydantic validation",
         "max_steps": max_steps,
         "max_actions_per_step": 3,
         "headless": not headed,

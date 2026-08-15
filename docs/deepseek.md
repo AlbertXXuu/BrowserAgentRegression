@@ -59,6 +59,11 @@ The command exits with `0` only when independent DOM checkpoints pass. A model s
 finished is not sufficient. One agent attempt can make multiple paid model requests as it takes
 steps or retries, so check the provider balance before running.
 
+The repository-local adapter requests DeepSeek JSON Output for Browser Use's complete
+`AgentOutput` object and validates it with the framework's Pydantic schema. It does not repair or
+guess malformed action parameters. This avoids relying on a forced function call for a deeply
+nested agent-output schema while leaving Browser Use's action execution unchanged.
+
 ## 4. Run the three-task Gate C check
 
 After the single attempt works, run all three clean tasks once:

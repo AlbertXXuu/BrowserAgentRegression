@@ -56,6 +56,10 @@ DeepSeek API key (masked with *; not stored):
 只有独立 DOM 检查点全部通过时，命令才返回退出码 `0`；模型自己声称“已完成”不算成功。
 一次 Agent attempt 可能因多步操作或重试而产生多次付费模型请求，运行前请检查账户余额。
 
+仓库内的薄适配层使用 DeepSeek JSON Output 请求完整的 Browser Use `AgentOutput`，再通过框架
+的 Pydantic schema 校验。它不会猜测或修复格式错误的动作参数。这样可以避开对深层嵌套
+Agent 输出强制使用 function call，同时不改变 Browser Use 的动作执行逻辑。
+
 ## 4. 运行三任务 Gate C
 
 单任务验证成功后，用一次命令运行三个 clean 任务：
