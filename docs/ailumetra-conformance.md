@@ -14,7 +14,7 @@
 | Repository baseline | Pass | License/font notice, contributing/security routes, lint, tests, package and wheel smoke |
 | Remote repository and CI | Pass | Public GitHub repository exists and the first Linux CI run completed successfully |
 | Three-task Phase 0 matrix | Pass | Three tasks are implemented; the complete oracle passed 360/360 attempts and calibration localized three regressions |
-| Real-agent feasibility | Pending | Browser Use + DeepSeek command and independent scorer exist; no authenticated three-task run is preserved yet |
+| Real-agent feasibility | Pass | Authenticated Browser Use + DeepSeek Gate C evidence passes 3/3 tasks and all nine independent checkpoints |
 | Independent adoption | Pending | Two non-author clone-and-run reports are required |
 | Formal release | Not applicable | v0.1 is forbidden until the Phase 0 GO gates pass |
 

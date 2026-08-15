@@ -19,7 +19,7 @@
 结账、商品查找和通知偏好任务、语义不变的受控 UI 扰动、检查点级评分、重复运行和
 JSON 回归报告。
 
-> 三个必需任务均已完成，确定性 fixture 与合成回归 Gate 已通过；真实 Agent 可行性和
+> 三个必需任务均已完成，确定性 fixture、合成回归与真实 Agent 可行性 Gate 已通过；
 > 两位独立开发者运行仍待验证。只有 [PROJECT.md](PROJECT.md) 中所有 Gate 均通过，
 > Phase 0 才是 **GO**。在此之前，这个仓库仍是一个可证伪的项目假设，不是完成品。
 
@@ -55,6 +55,22 @@ JSON 回归报告。
 
 这些是**合成 runner 校准结果**，不是模型或真实浏览器 Agent 的 benchmark 分数。它们只用来
 证明 fixture 稳定且 runner 能检测回归，然后才值得接入真实 Agent。
+
+## Gate C 真实 Agent 可行性证据
+
+在 revision `b817b68` 上，Browser Use 0.13.7 与 `deepseek-v4-flash` 对每个任务各完成一次
+经过认证的 clean 运行。独立 DOM 评分结果为：
+
+| 任务 | 独立结果 | 耗时 |
+|---|---:|---:|
+| `checkout.basic.v1` | 1/1 | 45.36 秒 |
+| `catalog.find-and-save.v1` | 1/1 | 33.69 秒 |
+| `preferences.notifications.v1` | 1/1 | 31.07 秒 |
+
+可以检查 [Gate C 报告](docs/evidence/phase0-deepseek-gate-c-02.json)及其
+[结果解释](docs/evidence/phase0-deepseek-gate-c-02.md)。这证明集成可行，但不证明重复运行
+可靠性：三个轨迹都出现了可恢复的空动作或格式错误，checkout 甚至在 DOM 目标已经通过后
+错误地自报失败。项目以独立评分器为准，不以 Agent 自述为准。
 
 ## 为什么做这个项目
 

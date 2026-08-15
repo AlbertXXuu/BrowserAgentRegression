@@ -21,8 +21,8 @@ The current executable slice provides deterministic checkout, catalog, and notif
 preference fixtures, controlled semantic-preserving UI perturbations, checkpoint-level scoring,
 repeated runs, and a JSON regression report.
 
-> Status: all three required tasks are implemented, and the deterministic fixture and synthetic
-> regression gates pass. Real-agent feasibility and two independent developer runs remain
+> Status: all three required tasks are implemented, and the deterministic fixture, synthetic
+> regression, and real-agent feasibility gates pass. Two independent developer runs remain
 > pending. Phase 0 is a **GO only if every gate in [PROJECT.md](PROJECT.md) passes**; until then,
 > this repository remains a falsifiable project hypothesis, not a finished product.
 
@@ -59,6 +59,23 @@ expected task-specific checkpoint: `checkout.email.accepted`, `catalog.query.app
 These are **synthetic harness-calibration results**, not model or browser-agent benchmark
 scores. Their purpose is to prove fixture stability and regression sensitivity before a real
 agent adapter is added.
+
+## Gate C real-agent feasibility evidence
+
+On revision `b817b68`, Browser Use 0.13.7 with `deepseek-v4-flash` completed one authenticated
+clean attempt for each task. Independent DOM scoring produced:
+
+| Task | Independent result | Duration |
+|---|---:|---:|
+| `checkout.basic.v1` | 1/1 | 45.36 s |
+| `catalog.find-and-save.v1` | 1/1 | 33.69 s |
+| `preferences.notifications.v1` | 1/1 | 31.07 s |
+
+Inspect the [Gate C report](docs/evidence/phase0-deepseek-gate-c-02.json) and its
+[interpretation](docs/evidence/phase0-deepseek-gate-c-02.md). This passes integration feasibility,
+not repeated reliability: all three trajectories contained recoverable empty or malformed model
+outputs, and checkout incorrectly self-reported failure after the DOM goal had passed. The
+independent scorer, rather than the Agent's claim, remains authoritative.
 
 ## Why this exists
 

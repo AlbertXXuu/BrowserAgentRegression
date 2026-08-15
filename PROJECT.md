@@ -75,9 +75,10 @@ technical success alone is not a GO decision.
 
 Gate A and Gate B pass on the third local slice: the reference oracle completed 360/360
 attempts, and the synthetic candidate produced three correctly localized popup regressions.
-The Gate C adapter is implemented and locally exercised without a provider call, but Gate C
-remains pending until one authenticated run completes all three goals. Gate D also remains
-pending.
+Gate C passes on revision `b817b68`: one authenticated Browser Use + `deepseek-v4-flash` run
+completed all three clean goals and passed all nine independent DOM checkpoints. The run proves
+integration feasibility but also retained transient model-output instability; it is not a repeated
+reliability result. Gate D remains pending.
 
 The calibration drivers are controls for the harness. They are not evidence about the quality
 of any model or browser-agent framework.

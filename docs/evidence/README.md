@@ -20,6 +20,8 @@ dashboard.
 | `phase0-deepseek-gate-c-01.md` | Diagnosis and correction record for the first three-task run | DeepSeek forced-tool structured-output failure documented |
 | `phase0-deepseek-smoke-04.json` | JSON Output checkout smoke run on revision `2e41fa3` | 1/1 independent pass despite a false-negative Agent self-report |
 | `phase0-deepseek-smoke-04.md` | Interpretation of the checkout smoke run | Provider compatibility restored; remaining Agent-output instability documented |
+| `phase0-deepseek-gate-c-02.json` | Corrected authenticated three-task run on revision `b817b68` | 3/3 tasks and 9/9 independent checkpoints pass |
+| `phase0-deepseek-gate-c-02.md` | Gate C result and limitation record | Gate C passes; transient model-output instability remains visible |
 
 Slice 01 uses evidence schema `0.1`. Slices 02 and 03 use schema `0.2`, adding task identity
 to attempts, summaries, regressions, and configuration. All files are labelled
