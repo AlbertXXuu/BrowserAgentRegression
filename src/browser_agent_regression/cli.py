@@ -6,6 +6,7 @@ import getpass
 import json
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from threading import Event
 from typing import cast
@@ -148,10 +149,47 @@ def _resolve_deepseek_api_key() -> str:
 
     print("No DEEPSEEK_API_KEY was found.")
     print("Create or copy a key at https://platform.deepseek.com/api_keys")
-    api_key = getpass.getpass("DeepSeek API key (hidden; not stored): ").strip()
+    if os.name == "nt":
+        api_key = _masked_windows_input(
+            "DeepSeek API key (masked with *; not stored): "
+        ).strip()
+    else:
+        api_key = getpass.getpass("DeepSeek API key (hidden; not stored): ").strip()
     if not api_key:
         raise RuntimeError("A DeepSeek API key is required for this command.")
     return api_key
+
+
+def _masked_windows_input(
+    prompt: str,
+    *,
+    read_character: Callable[[], str] | None = None,
+) -> str:
+    if read_character is None:
+        import msvcrt
+
+        read_character = msvcrt.getwch
+
+    print(prompt, end="", flush=True)
+    characters: list[str] = []
+    while True:
+        character = read_character()
+        if character in {"\r", "\n"}:
+            print()
+            return "".join(characters)
+        if character == "\x03":
+            raise KeyboardInterrupt
+        if character == "\b":
+            if characters:
+                characters.pop()
+                print("\b \b", end="", flush=True)
+            continue
+        if character in {"\x00", "\xe0"}:
+            read_character()
+            continue
+        if character.isprintable():
+            characters.append(character)
+            print("*", end="", flush=True)
 
 
 def _deepseek(args: argparse.Namespace) -> int:
@@ -166,8 +204,9 @@ def _deepseek(args: argparse.Namespace) -> int:
         variants = _variants(args.variant or ["clean"])
         attempt_count = len(tasks) * len(variants) * args.runs
         print(
-            f"Running Browser Use + {args.model}: {attempt_count} paid API "
-            f"attempt{'s' if attempt_count != 1 else ''}."
+            f"Running Browser Use + {args.model}: {attempt_count} agent "
+            f"attempt{'s' if attempt_count != 1 else ''}. "
+            "Each attempt may make multiple paid API requests."
         )
         attempts = asyncio.run(
             run_deepseek_matrix(

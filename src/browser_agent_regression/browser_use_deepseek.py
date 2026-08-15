@@ -44,6 +44,35 @@ _CHECKPOINT_SCRIPTS: dict[TaskId, str] = {
 }
 
 
+class _NonThinkingCompletions:
+    def __init__(self, completions: Any) -> None:
+        self._completions = completions
+
+    async def create(self, *args: Any, **kwargs: Any) -> Any:
+        extra_body = dict(kwargs.get("extra_body") or {})
+        extra_body["thinking"] = {"type": "disabled"}
+        kwargs["extra_body"] = extra_body
+        return await self._completions.create(*args, **kwargs)
+
+
+class _NonThinkingChat:
+    def __init__(self, chat: Any) -> None:
+        self._chat = chat
+        self.completions = _NonThinkingCompletions(chat.completions)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._chat, name)
+
+
+class _NonThinkingClient:
+    def __init__(self, client: Any) -> None:
+        self._client = client
+        self.chat = _NonThinkingChat(client.chat)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._client, name)
+
+
 def _bounded_message(
     error: BaseException | str,
     *,
@@ -92,6 +121,10 @@ async def _run_attempt(
             'Browser Use is not installed. Run: python -m pip install -e ".[agent]"'
         ) from exc
 
+    class NonThinkingChatDeepSeek(ChatDeepSeek):
+        def _client(self) -> Any:
+            return _NonThinkingClient(super()._client())
+
     driver = cast(Driver, f"browser-use/{model}")
     browser = Browser(
         headless=not headed,
@@ -109,7 +142,12 @@ async def _run_attempt(
         await page.goto(server.url(TASK_FIXTURES[task_id], variant=variant))
         await asyncio.sleep(0.25)
 
-        llm = ChatDeepSeek(model=model, api_key=api_key, temperature=0.0)
+        llm = NonThinkingChatDeepSeek(
+            model=model,
+            api_key=api_key,
+            base_url="https://api.deepseek.com",
+            temperature=0.0,
+        )
         agent = Agent(
             task=(
                 "You are on a controlled local test page. Complete exactly this goal: "
@@ -129,13 +167,17 @@ async def _run_attempt(
             source="browser-agent-regression",
         )
         history = await agent.run(max_steps=max_steps)
-        current_page = await browser.must_get_current_page()
-        checkpoints = await _score_page(current_page, task_id)
+        history_errors = [item for item in history.errors() if item]
+        try:
+            checkpoints = await _score_page(page, task_id)
+        except Exception as scoring_error:
+            retained_error: BaseException | str = (
+                history_errors[-1] if history_errors else scoring_error
+            )
+            error = _bounded_message(retained_error, secrets=(api_key,))
 
-        if not all(checkpoints.values()):
-            history_errors = [item for item in history.errors() if item]
-            if history_errors:
-                error = _bounded_message(history_errors[-1], secrets=(api_key,))
+        if not all(checkpoints.values()) and history_errors and error is None:
+            error = _bounded_message(history_errors[-1], secrets=(api_key,))
     except Exception as exc:  # The report must retain provider and agent failures.
         error = _bounded_message(exc, secrets=(api_key,))
     finally:
@@ -197,6 +239,7 @@ def deepseek_run_identity(*, model: str, max_steps: int) -> dict[str, object]:
         "use_vision": False,
         "use_judge": False,
         "temperature": 0.0,
+        "thinking": "disabled",
         "max_steps": max_steps,
         "max_actions_per_step": 3,
         "prompt_strategy": "manifest goal with current-tab and visible-confirmation constraints",

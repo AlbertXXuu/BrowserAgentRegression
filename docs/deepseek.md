@@ -31,7 +31,7 @@ python -m playwright install chromium
 The `[agent]` extra is intentionally separate. Users running only deterministic calibration do
 not install Browser Use or provider SDKs.
 
-## 3. Start with one paid smoke attempt
+## 3. Start with one agent smoke attempt
 
 Do not put the key on the command line. Run:
 
@@ -47,15 +47,17 @@ browser-agent-regression deepseek `
 If `DEEPSEEK_API_KEY` is not already set, the CLI prints the key-management link and prompts:
 
 ```text
-DeepSeek API key (hidden; not stored):
+DeepSeek API key (masked with *; not stored):
 ```
 
-Paste the key and press Enter. Nothing is displayed while typing. The key is passed directly to
-the provider client and is not written to the report, repository, shell history, or a `.env`
-file.
+On Windows, paste the key and press Enter. One `*` is displayed for each character, confirming
+that the paste worked without revealing the key. Other platforms use hidden input. The key is
+passed directly to the provider client and is not written to the report, repository, shell
+history, or a `.env` file.
 
 The command exits with `0` only when independent DOM checkpoints pass. A model saying that it
-finished is not sufficient.
+finished is not sufficient. One agent attempt can make multiple paid model requests as it takes
+steps or retries, so check the provider balance before running.
 
 ## 4. Run the three-task Gate C check
 
@@ -76,8 +78,8 @@ browser-agent-regression deepseek `
   --output deepseek-repeated.json
 ```
 
-That example makes 18 paid attempts: 3 tasks × 2 conditions × 3 runs. The CLI prints the attempt
-count before starting.
+That example makes 18 agent attempts: 3 tasks × 2 conditions × 3 runs. Each attempt can make
+multiple paid API requests. The CLI prints the agent-attempt count before starting.
 
 ## 5. Non-interactive use
 

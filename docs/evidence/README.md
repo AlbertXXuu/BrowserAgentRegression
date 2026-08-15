@@ -11,7 +11,10 @@ dashboard.
 | `phase0-slice-02-calibration.json` | 10 baseline and candidate repetitions for two tasks on clean and popup conditions | clean parity; two popup regressions detected |
 | `phase0-slice-03-oracle.json` | 30 reference-oracle repetitions for three tasks under four conditions | 360/360 pass |
 | `phase0-slice-03-calibration.json` | 10 baseline and candidate repetitions for three tasks on clean and popup conditions | clean parity; three popup regressions detected |
+| `phase0-deepseek-smoke.json` | First authenticated Browser Use + DeepSeek smoke run on revision `219bcbb` | 0/1; provider request compatibility failure retained |
+| `phase0-deepseek-smoke-01.md` | Diagnosis and correction record for the first authenticated run | DeepSeek thinking/tool-choice conflict documented |
 
 Slice 01 uses evidence schema `0.1`. Slices 02 and 03 use schema `0.2`, adding task identity
 to attempts, summaries, regressions, and configuration. All files are labelled
 `synthetic-calibration`: they validate the runner, not the quality of a model or agent framework.
+Real-agent evidence is labelled separately and includes failed runs.

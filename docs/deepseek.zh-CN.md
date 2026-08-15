@@ -30,7 +30,7 @@ python -m playwright install chromium
 `[agent]` 被刻意隔离为可选依赖。只运行确定性校准的用户不必安装 Browser Use 或模型
 Provider SDK。
 
-## 3. 先做一次付费 smoke test
+## 3. 先做一次 Agent smoke test
 
 不要把 Key 直接写在命令行里。运行：
 
@@ -46,13 +46,15 @@ browser-agent-regression deepseek `
 如果当前环境没有 `DEEPSEEK_API_KEY`，CLI 会显示 Key 管理链接，并提示：
 
 ```text
-DeepSeek API key (hidden; not stored):
+DeepSeek API key (masked with *; not stored):
 ```
 
-粘贴 Key 后按 Enter。输入过程不会显示字符。Key 只会直接传给 Provider 客户端，不会写入
-报告、仓库、Shell 历史或 `.env` 文件。
+在 Windows 中粘贴 Key 后按 Enter，每个字符会显示为一个 `*`，因此可以确认粘贴已经生效，
+但不会暴露 Key 内容；其他平台继续使用完全隐藏的输入。Key 只会直接传给 Provider 客户端，
+不会写入报告、仓库、Shell 历史或 `.env` 文件。
 
 只有独立 DOM 检查点全部通过时，命令才返回退出码 `0`；模型自己声称“已完成”不算成功。
+一次 Agent attempt 可能因多步操作或重试而产生多次付费模型请求，运行前请检查账户余额。
 
 ## 4. 运行三任务 Gate C
 
@@ -72,8 +74,8 @@ browser-agent-regression deepseek `
   --output deepseek-repeated.json
 ```
 
-上例会产生 18 次付费尝试：3 个任务 × 2 种条件 × 3 次重复。CLI 会在开始前明确显示
-总尝试次数。
+上例会产生 18 次 Agent attempt：3 个任务 × 2 种条件 × 3 次重复；每次 attempt 都可能
+包含多次付费 API 请求。CLI 会在开始前明确显示 Agent attempt 总数。
 
 ## 5. 环境变量与清理
 
