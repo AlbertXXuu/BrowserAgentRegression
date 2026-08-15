@@ -1,10 +1,12 @@
 import asyncio
 from types import SimpleNamespace
 
+import browser_agent_regression.browser_use_deepseek as deepseek_module
 from browser_agent_regression.browser_use_deepseek import (
     _bounded_message,
     _NonThinkingClient,
     _scoring_failure_message,
+    deepseek_run_identity,
 )
 
 
@@ -60,3 +62,21 @@ def test_scoring_failure_retains_oracle_and_agent_errors_without_key() -> None:
     assert "last agent error: model returned malformed AgentOutput" in message
     assert secret not in message
     assert "[REDACTED]" in message
+
+
+def test_run_identity_records_browser_display_mode(monkeypatch) -> None:
+    monkeypatch.setattr(deepseek_module, "version", lambda _package: "0.13.7")
+
+    headed = deepseek_run_identity(
+        model="deepseek-v4-flash",
+        max_steps=12,
+        headed=True,
+    )
+    headless = deepseek_run_identity(
+        model="deepseek-v4-flash",
+        max_steps=12,
+        headed=False,
+    )
+
+    assert headed["headless"] is False
+    assert headless["headless"] is True

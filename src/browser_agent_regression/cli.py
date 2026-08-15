@@ -230,7 +230,11 @@ def _deepseek(args: argparse.Namespace) -> int:
         tasks=tasks,
         variants=variants,
         evidence_kind="real-agent",
-        run_identity=deepseek_run_identity(model=args.model, max_steps=args.max_steps),
+        run_identity=deepseek_run_identity(
+            model=args.model,
+            max_steps=args.max_steps,
+            headed=args.headed,
+        ),
     )
     _write_report(report, args.output)
     passed = sum(attempt.passed for attempt in attempts)

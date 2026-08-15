@@ -245,7 +245,7 @@ async def run_deepseek_matrix(
     return attempts
 
 
-def deepseek_run_identity(*, model: str, max_steps: int) -> dict[str, object]:
+def deepseek_run_identity(*, model: str, max_steps: int, headed: bool) -> dict[str, object]:
     return {
         "agent": "browser-use",
         "agent_version": version("browser-use"),
@@ -257,6 +257,7 @@ def deepseek_run_identity(*, model: str, max_steps: int) -> dict[str, object]:
         "thinking": "disabled",
         "max_steps": max_steps,
         "max_actions_per_step": 3,
+        "headless": not headed,
         "prompt_strategy": "manifest goal with current-tab and visible-confirmation constraints",
         "tools": "browser-use default browser tools",
         "browser_lifecycle": "keep alive through independent scoring; force-kill after attempt",

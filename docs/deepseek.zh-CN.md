@@ -107,5 +107,5 @@ Remove-Item Env:DEEPSEEK_API_KEY
 
 真实 Agent 报告继续使用 evidence schema `0.2`，并标记
 `evidence_kind: "real-agent"`。报告记录 Browser Use 版本、模型、无视觉配置、运行次数、
-fixture 哈希、耗时、检查点和受限长度的错误，但不会记录 API Key。这些受控本地结果只证明
-集成可行性，不是 DeepSeek 或 Browser Use 的通用 benchmark。
+浏览器显示模式、fixture 哈希、耗时、检查点和受限长度的错误，但不会记录 API Key。这些
+受控本地结果只证明集成可行性，不是 DeepSeek 或 Browser Use 的通用 benchmark。

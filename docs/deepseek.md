@@ -110,6 +110,7 @@ unredacted private traces to issues.
 ## What the report means
 
 Real-agent reports keep evidence schema `0.2` and use `evidence_kind: "real-agent"`. They record
-the Browser Use version, model, non-vision setting, run count, fixture hashes, duration, checkpoint
-results, and bounded errors. They never record the API key. These controlled local results prove
-integration feasibility; they are not a general DeepSeek or Browser Use benchmark.
+the Browser Use version, model, non-vision setting, browser display mode, run count, fixture hashes,
+duration, checkpoint results, and bounded errors. They never record the API key. These controlled
+local results prove integration feasibility; they are not a general DeepSeek or Browser Use
+benchmark.
