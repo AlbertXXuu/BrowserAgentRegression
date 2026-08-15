@@ -21,5 +21,9 @@ python -m ruff check .
 python -m pytest
 ```
 
+The optional real-agent path is installed separately with
+`python -m pip install -e ".[dev,agent]"`. Never use a paid provider run as a substitute for the
+offline checks above.
+
 When reporting a run, include the operating system, Python version, exact command, and generated
 JSON report. Remove credentials and private URLs before attaching evidence.

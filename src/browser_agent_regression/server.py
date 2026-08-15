@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -12,13 +13,21 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         return
 
 
+class _FixtureHTTPServer(ThreadingHTTPServer):
+    def handle_error(self, request: object, client_address: object) -> None:
+        error = sys.exc_info()[1]
+        if isinstance(error, (BrokenPipeError, ConnectionResetError)):
+            return
+        super().handle_error(request, client_address)
+
+
 class FixtureServer:
     """Serve packaged fixtures on loopback with reset-by-reload state."""
 
     def __init__(self, port: int = 0) -> None:
         fixture_directory = Path(__file__).with_name("fixtures")
         handler = partial(_QuietHandler, directory=str(fixture_directory))
-        self._server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+        self._server = _FixtureHTTPServer(("127.0.0.1", port), handler)
         self._server.daemon_threads = True
         self._thread = Thread(target=self._server.serve_forever, daemon=True)
 

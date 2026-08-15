@@ -1,0 +1,73 @@
+{
+  "schema_version": "0.2",
+  "evidence_kind": "real-agent",
+  "created_at": "2026-08-15T05:38:15.862790+00:00",
+  "task_ids": [
+    "preferences.notifications.v1"
+  ],
+  "command": "deepseek",
+  "environment": {
+    "python": "3.11.0",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "playwright": "1.62.0",
+    "browser": null
+  },
+  "fixture_sha256": {
+    "preferences.html": "68dc9e973b761f9c1b0c68f016e1751d3fdf0cebecd7650058fbb60f997670ce",
+    "preferences.json": "cd1badbb9d7fcd1760fa4a4cd1db92dcb3a72cab9410422c2e1ca200a47d076c"
+  },
+  "configuration": {
+    "runs_per_driver_task_variant": 1,
+    "tasks": [
+      "preferences.notifications.v1"
+    ],
+    "variants": [
+      "clean"
+    ],
+    "run_identity": {
+      "agent": "browser-use",
+      "agent_version": "0.13.7",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "use_vision": false,
+      "use_judge": false,
+      "temperature": 0.0,
+      "max_steps": 12,
+      "max_actions_per_step": 3,
+      "prompt_strategy": "manifest goal with current-tab and visible-confirmation constraints",
+      "tools": "browser-use default browser tools",
+      "browser_use_telemetry": false,
+      "credential_input": "environment or hidden interactive prompt"
+    }
+  },
+  "summaries": [
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "browser-use/deepseek-v4-flash",
+      "variant": "clean",
+      "runs": 1,
+      "successes": 0,
+      "success_rate": 0.0,
+      "failure_checkpoints": {
+        "preferences.product_updates.disabled": 1
+      }
+    }
+  ],
+  "regressions": [],
+  "attempts": [
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "browser-use/deepseek-v4-flash",
+      "variant": "clean",
+      "passed": false,
+      "duration_ms": 9795.676,
+      "checkpoints": {
+        "preferences.product_updates.disabled": false,
+        "preferences.security_alerts.enabled": false,
+        "preferences.saved": false
+      },
+      "first_failed_checkpoint": "preferences.product_updates.disabled",
+      "error": "No current target found"
+    }
+  ]
+}

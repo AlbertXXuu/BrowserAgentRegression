@@ -17,21 +17,22 @@ A local-first experiment for answering one practical question: **did a browser-a
 improve reliability, or did it quietly break a workflow that used to pass?**
 
 The project is in a **5–7 day Phase 0 validation**. It is not yet a general-purpose framework.
-The current executable slice provides deterministic checkout and catalog fixtures, controlled
-semantic-preserving UI perturbations, checkpoint-level scoring, repeated runs, and a JSON
-regression report.
+The current executable slice provides deterministic checkout, catalog, and notification-
+preference fixtures, controlled semantic-preserving UI perturbations, checkpoint-level scoring,
+repeated runs, and a JSON regression report.
 
-> Status: two of three required tasks are implemented. Phase 0 is a **GO only if all technical
-> and user-validation gates in [PROJECT.md](PROJECT.md) pass**. Until then, the repository
-> should be read as a falsifiable project hypothesis, not a finished product.
+> Status: all three required tasks are implemented, and the deterministic fixture, synthetic
+> regression, and real-agent feasibility gates pass. Two independent developer runs remain
+> pending. Phase 0 is a **GO only if every gate in [PROJECT.md](PROJECT.md) passes**; until then,
+> this repository remains a falsifiable project hypothesis, not a finished product.
 
 The repository tracks Ailumetra [AOS-0.1 conformance](docs/ailumetra-conformance.md)
 without expanding the Phase 0 scope.
 
 ## Phase 0 calibration evidence
 
-The second slice was run locally from one source snapshot. The deterministic reference oracle
-completed 30/30 repetitions for both tasks under every current condition:
+The third slice was run locally from one source snapshot. The deterministic reference oracle
+completed 30/30 repetitions for all three tasks under every current condition:
 
 | Task | Condition | Reference oracle | Calibration baseline | Calibration candidate |
 |---|---|---:|---:|---:|
@@ -43,16 +44,38 @@ completed 30/30 repetitions for both tasks under every current condition:
 | `catalog.find-and-save.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
 | `catalog.find-and-save.v1` | `delayed-render` | 30/30 | — | — |
 | `catalog.find-and-save.v1` | `layout-shift` | 30/30 | — | — |
+| `preferences.notifications.v1` | `clean` | 30/30 | 10/10 | 10/10 |
+| `preferences.notifications.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
+| `preferences.notifications.v1` | `delayed-render` | 30/30 | — | — |
+| `preferences.notifications.v1` | `layout-shift` | 30/30 | — | — |
 
-The intentionally popup-blind candidate preserved clean performance on both tasks but regressed
-by 100 percentage points under the overlay. All failures localized first to the expected
-task-specific checkpoint: `checkout.email.accepted` or `catalog.query.applied`. Inspect the
-preserved [oracle evidence](docs/evidence/phase0-slice-02-oracle.json) and
-[calibration evidence](docs/evidence/phase0-slice-02-calibration.json).
+The intentionally popup-blind candidate preserved clean performance on all three tasks but
+regressed by 100 percentage points under the overlay. All failures localized first to the
+expected task-specific checkpoint: `checkout.email.accepted`, `catalog.query.applied`, or
+`preferences.product_updates.disabled`. Inspect the preserved
+[oracle evidence](docs/evidence/phase0-slice-03-oracle.json) and
+[calibration evidence](docs/evidence/phase0-slice-03-calibration.json).
 
 These are **synthetic harness-calibration results**, not model or browser-agent benchmark
 scores. Their purpose is to prove fixture stability and regression sensitivity before a real
 agent adapter is added.
+
+## Gate C real-agent feasibility evidence
+
+On revision `b817b68`, Browser Use 0.13.7 with `deepseek-v4-flash` completed one authenticated
+clean attempt for each task. Independent DOM scoring produced:
+
+| Task | Independent result | Duration |
+|---|---:|---:|
+| `checkout.basic.v1` | 1/1 | 45.36 s |
+| `catalog.find-and-save.v1` | 1/1 | 33.69 s |
+| `preferences.notifications.v1` | 1/1 | 31.07 s |
+
+Inspect the [Gate C report](docs/evidence/phase0-deepseek-gate-c-02.json) and its
+[interpretation](docs/evidence/phase0-deepseek-gate-c-02.md). This passes integration feasibility,
+not repeated reliability: all three trajectories contained recoverable empty or malformed model
+outputs, and checkout incorrectly self-reported failure after the DOM goal had passed. The
+independent scorer, rather than the Agent's claim, remains authoritative.
 
 ## Why this exists
 
@@ -65,7 +88,8 @@ platform is built.
 
 ## Current executable slice
 
-The included checkout and catalog find-and-save tasks each have four conditions:
+The included checkout, catalog find-and-save, and notification-preference tasks each have four
+conditions:
 
 - `clean`
 - `popup-overlay`
@@ -123,6 +147,20 @@ Run the local fixture manually:
 ```bash
 browser-agent-regression serve
 ```
+
+## Optional real agent: Browser Use + DeepSeek
+
+Install the isolated agent extra and start with one paid attempt:
+
+```bash
+python -m pip install -e ".[agent]"
+browser-agent-regression deepseek --task preferences.notifications.v1 --runs 1 --headed
+```
+
+When `DEEPSEEK_API_KEY` is absent, the CLI guides you to the official platform and accepts the
+key through hidden input without storing it. Read the complete [DeepSeek setup and safe-key
+guide](docs/deepseek.md) before running all three tasks. Real-agent results use independent DOM
+checks and remain separate from the synthetic calibration above.
 
 ## Help validate Phase 0
 

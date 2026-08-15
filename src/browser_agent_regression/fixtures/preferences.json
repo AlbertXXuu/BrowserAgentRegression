@@ -1,0 +1,27 @@
+{
+  "schema_version": "0.1",
+  "task_id": "preferences.notifications.v1",
+  "goal": "Disable product updates, enable security alerts, and save the notification preferences.",
+  "fixture": "preferences.html",
+  "reset": "reload",
+  "variants": {
+    "clean": "Stable reference layout.",
+    "popup-overlay": "A dismissible informational overlay covers the unchanged preferences form.",
+    "delayed-render": "The unchanged preferences form becomes visible after a bounded delay.",
+    "layout-shift": "An informational panel shifts the unchanged preferences form vertically."
+  },
+  "checkpoints": [
+    {
+      "id": "preferences.product_updates.disabled",
+      "description": "Product update notifications are disabled."
+    },
+    {
+      "id": "preferences.security_alerts.enabled",
+      "description": "Security alert notifications are enabled."
+    },
+    {
+      "id": "preferences.saved",
+      "description": "The expected preferences are saved."
+    }
+  ]
+}

@@ -33,6 +33,9 @@ dev = [
   "pytest>=8.4,<9",
   "ruff>=0.12,<1",
 ]
+agent = [
+  "browser-use[core]>=0.13.7,<0.14",
+]
 
 [project.scripts]
 browser-agent-regression = "browser_agent_regression.cli:main"

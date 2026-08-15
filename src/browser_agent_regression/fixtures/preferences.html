@@ -4,50 +4,54 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
-    <title>Checkout fixture</title>
+    <title>Notification preferences fixture</title>
     <style>
       :root { color-scheme: light; font-family: Arial, sans-serif; color: #172033; }
       * { box-sizing: border-box; }
       body { margin: 0; background: #f4f7fb; }
-      main { width: min(92%, 560px); margin: 64px auto; }
+      main { width: min(92%, 600px); margin: 64px auto; }
       h1 { margin-bottom: 8px; }
       p { color: #536078; }
       form, .promotion { padding: 24px; border: 1px solid #dce3ee; border-radius: 14px;
         background: white; box-shadow: 0 10px 30px rgb(15 23 42 / 7%); }
-      label { display: block; margin: 16px 0 6px; font-weight: 700; }
-      input, select, button { width: 100%; min-height: 44px; padding: 10px 12px;
-        border: 1px solid #aeb9ca; border-radius: 8px; font: inherit; }
-      button { margin-top: 20px; border: 0; background: #2563eb; color: white;
-        font-weight: 700; cursor: pointer; }
+      fieldset { margin: 0; padding: 0; border: 0; }
+      legend { margin-bottom: 10px; font-weight: 700; }
+      label { display: flex; align-items: center; gap: 12px; min-height: 52px;
+        border-bottom: 1px solid #e5eaf2; cursor: pointer; }
+      label:last-of-type { border-bottom: 0; }
+      input { width: 20px; height: 20px; }
+      button { width: 100%; min-height: 44px; margin-top: 20px; padding: 10px 12px;
+        border: 0; border-radius: 8px; background: #2563eb; color: white;
+        font: inherit; font-weight: 700; cursor: pointer; }
       [role="status"] { margin-top: 18px; padding: 14px; border-radius: 8px;
         background: #eaf8ef; color: #17653a; font-weight: 700; }
       [hidden] { display: none !important; }
       .overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
         padding: 24px; background: rgb(15 23 42 / 58%); }
       .dialog { width: min(92%, 420px); padding: 26px; border-radius: 14px; background: white; }
-      .promotion { min-height: 170px; margin-bottom: 20px; background: #eef4ff; }
+      .promotion { min-height: 160px; margin-bottom: 20px; background: #eef4ff; }
     </style>
   </head>
   <body>
     <main>
-      <h1>Checkout</h1>
-      <p>Use the requested email and shipping method to complete the order.</p>
-      <form aria-label="Checkout form">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="off">
-
-        <label for="shipping">Shipping</label>
-        <select id="shipping" name="shipping">
-          <option value="standard">Standard</option>
-          <option value="express">Express</option>
-        </select>
-
-        <button type="submit">Complete purchase</button>
-      </form>
-      <div role="status" hidden>Order confirmed</div>
+      <h1>Notification preferences</h1>
+      <p>Choose which account notifications you want to receive.</p>
+      <section id="workspace">
+        <form aria-label="Notification preferences">
+          <fieldset>
+            <legend>Email notifications</legend>
+            <label><input id="product-updates" type="checkbox" checked>Product updates</label>
+            <label><input id="security-alerts" type="checkbox">Security alerts</label>
+            <label><input id="weekly-summary" type="checkbox" checked>Weekly summary</label>
+          </fieldset>
+          <button type="submit">Save preferences</button>
+        </form>
+        <div role="status" hidden>Preferences saved</div>
+      </section>
     </main>
     <script>
       const variant = new URLSearchParams(window.location.search).get("variant") || "clean";
+      const workspace = document.querySelector("#workspace");
       const form = document.querySelector("form");
 
       if (variant === "popup-overlay") {
@@ -57,26 +61,27 @@
         overlay.setAttribute("aria-modal", "true");
         overlay.innerHTML = `
           <div class="dialog">
-            <h2>Shipping notice</h2>
-            <p>Express delivery remains available for this order.</p>
-            <button type="button">Continue to checkout</button>
+            <h2>Notification notice</h2>
+            <p>You can change these local fixture preferences at any time.</p>
+            <button type="button">Continue to preferences</button>
           </div>`;
         overlay.querySelector("button").addEventListener("click", () => overlay.remove());
         document.body.append(overlay);
       }
 
       if (variant === "delayed-render") {
-        form.hidden = true;
-        window.setTimeout(() => { form.hidden = false; }, 400);
+        workspace.hidden = true;
+        window.setTimeout(() => { workspace.hidden = false; }, 400);
       }
 
       if (variant === "layout-shift") {
         window.setTimeout(() => {
           const promotion = document.createElement("aside");
           promotion.className = "promotion";
-          promotion.innerHTML = "<strong>Member benefit</strong><p>Shipping choices are unchanged.</p>";
-          form.before(promotion);
-        }, 200);
+          promotion.innerHTML =
+            "<strong>Account tip</strong><p>Your notification choices are unchanged.</p>";
+          workspace.before(promotion);
+        }, 100);
       }
 
       form.addEventListener("submit", (event) => {

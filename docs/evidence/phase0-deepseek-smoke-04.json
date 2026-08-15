@@ -1,0 +1,75 @@
+{
+  "schema_version": "0.2",
+  "evidence_kind": "real-agent",
+  "created_at": "2026-08-15T06:15:40.950466+00:00",
+  "task_ids": [
+    "checkout.basic.v1"
+  ],
+  "command": "deepseek",
+  "environment": {
+    "python": "3.11.0",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "playwright": "1.62.0",
+    "browser": null
+  },
+  "fixture_sha256": {
+    "checkout.html": "7db180d755f8c561df762281d8091d904f727f5fb8c909d78dab874035acf71e",
+    "checkout.json": "20c09036648bf66678c05a6e470470019c7f23f11c57450a746309cf28e43d20"
+  },
+  "configuration": {
+    "runs_per_driver_task_variant": 1,
+    "tasks": [
+      "checkout.basic.v1"
+    ],
+    "variants": [
+      "clean"
+    ],
+    "run_identity": {
+      "agent": "browser-use",
+      "agent_version": "0.13.7",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "use_vision": false,
+      "use_judge": false,
+      "temperature": 0.0,
+      "thinking": "disabled",
+      "agent_output_transport": "DeepSeek JSON Output with Pydantic validation",
+      "max_steps": 12,
+      "max_actions_per_step": 3,
+      "headless": false,
+      "prompt_strategy": "manifest goal with current-tab and visible-confirmation constraints",
+      "tools": "browser-use default browser tools",
+      "browser_lifecycle": "keep alive through independent scoring; force-kill after attempt",
+      "browser_use_telemetry": false,
+      "credential_input": "environment or hidden interactive prompt"
+    }
+  },
+  "summaries": [
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "browser-use/deepseek-v4-flash",
+      "variant": "clean",
+      "runs": 1,
+      "successes": 1,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    }
+  ],
+  "regressions": [],
+  "attempts": [
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "browser-use/deepseek-v4-flash",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 50005.721,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    }
+  ]
+}
