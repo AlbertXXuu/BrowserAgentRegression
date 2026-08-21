@@ -1,4 +1,10 @@
-from browser_agent_regression.cli import _masked_windows_input
+import json
+from unittest.mock import Mock
+
+import pytest
+
+import browser_agent_regression.cli as cli_module
+from browser_agent_regression.cli import _masked_windows_input, build_parser
 
 
 def test_masked_windows_input_shows_feedback_and_supports_backspace(capsys) -> None:
@@ -8,3 +14,46 @@ def test_masked_windows_input_shows_feedback_and_supports_backspace(capsys) -> N
 
     assert result == "sky"
     assert capsys.readouterr().out == "Key: ***\b \b*\n"
+
+
+def test_demo_defaults_to_a_short_local_report() -> None:
+    args = build_parser().parse_args(["demo"])
+
+    assert args.runs == 1
+    assert args.output.as_posix() == "runs/demo-report.json"
+    assert args.task is None
+    assert args.headed is False
+
+
+@pytest.mark.browser
+def test_demo_runs_without_resolving_a_provider_key(tmp_path, monkeypatch, capsys) -> None:
+    key_resolver = Mock(side_effect=AssertionError("demo must not resolve an API key"))
+    monkeypatch.setattr(cli_module, "_resolve_deepseek_api_key", key_resolver)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    output = tmp_path / "demo.json"
+
+    result = cli_module.main(
+        [
+            "demo",
+            "--runs",
+            "1",
+            "--task",
+            "preferences.notifications.v1",
+            "--output",
+            str(output),
+        ]
+    )
+
+    key_resolver.assert_not_called()
+    assert result == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["command"] == "demo"
+    assert report["evidence_kind"] == "synthetic-calibration"
+    assert report["configuration"]["runs_per_driver_task_variant"] == 1
+    assert len(report["attempts"]) == 4
+    assert report["regressions"][0]["task_id"] == "preferences.notifications.v1"
+    assert "api_key" not in json.dumps(report).casefold()
+    rendered = capsys.readouterr().out
+    assert "no API key" in rendered
+    assert "Demo result: PASS" in rendered
+    assert "not a model or browser-agent benchmark result" in rendered

@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="docs/assets/ailumetra-wordmark.svg" width="320" alt="Ailumetra — Agent Reliability">
+  <img src="docs/assets/alvenx-wordmark.svg" width="320" alt="AlvenX — Agent Reliability">
 </p>
 
 # Browser Agent Regression
 
 **Browser Agent Regression is the open-source browser-agent reliability project in the
-Ailumetra series.**
+AlvenX series.**
 
 [![CI](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/workflows/ci.yml/badge.svg)](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB)
@@ -26,8 +26,33 @@ repeated runs, and a JSON regression report.
 > pending. Phase 0 is a **GO only if every gate in [PROJECT.md](PROJECT.md) passes**; until then,
 > this repository remains a falsifiable project hypothesis, not a finished product.
 
-The repository tracks Ailumetra [AOS-0.1 conformance](docs/ailumetra-conformance.md)
+The repository tracks AlvenX [AOS-0.1 conformance](docs/alvenx-conformance.md)
 without expanding the Phase 0 scope.
+
+## Zero-key quick start
+
+Python 3.11–3.13 is supported. Create a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Activate it with `.venv\Scripts\Activate.ps1` in PowerShell or
+`source .venv/bin/activate` on macOS/Linux, then run:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m playwright install chromium
+browser-agent-regression demo
+```
+
+The `demo` command requires no API key, model account, paid request, or external model service.
+It runs 12 deterministic local attempts, prints a short explanation, and writes full evidence
+to `runs/demo-report.json`. The expected result is three localized controlled regressions with
+clean behavior preserved.
+
+This is synthetic harness calibration, not an AI-agent benchmark. Browser installation may
+download Chromium once; subsequent demo runs are local.
 
 ## Phase 0 calibration evidence
 
@@ -101,23 +126,9 @@ oracle. A deliberately popup-blind calibration driver proves that the runner can
 a real regression from fixture instability. Neither driver is presented as an AI-agent
 benchmark result.
 
-## Quick start
+## Deeper local checks
 
-Python 3.11–3.13 is supported.
-
-```bash
-python -m venv .venv
-```
-
-Activate it with `.venv\Scripts\Activate.ps1` in PowerShell or
-`source .venv/bin/activate` on macOS/Linux, then install the project and browser:
-
-```bash
-python -m pip install -e ".[dev]"
-python -m playwright install chromium
-```
-
-Verify that the fixture and oracle are stable:
+Run the stronger fixture-stability check used by Phase 0 evidence:
 
 ```bash
 browser-agent-regression oracle --runs 30
@@ -149,6 +160,9 @@ browser-agent-regression serve
 ```
 
 ## Optional real agent: Browser Use + DeepSeek
+
+This section is not part of the quick start. Use it only when you deliberately want to make
+paid external model requests.
 
 Install the isolated agent extra and start with one paid attempt:
 
@@ -185,5 +199,5 @@ Apache-2.0.
 
 ---
 
-An Ailumetra open-source project. The functional project name remains independent of the
+An AlvenX open-source project. The functional project name remains independent of the
 series brand.

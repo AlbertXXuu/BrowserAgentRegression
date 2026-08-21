@@ -68,6 +68,7 @@ technical success alone is not a GO decision.
 - All three perturbation classes on all three tasks.
 - A deterministic reference oracle.
 - A deliberately degraded calibration candidate.
+- A one-command, zero-API-key local demo that saves a clearly labelled synthetic report.
 - CLI commands for serving, selecting tasks, oracle stability runs, and paired calibration.
 - One concrete optional Browser Use + DeepSeek command with hidden credential input and
   independent DOM checkpoint scoring.
@@ -95,7 +96,7 @@ Phase 0 will not include:
 - a leaderboard or claims of broad agent ranking;
 - arbitrary websites whose state cannot be reset deterministically;
 - more tasks or perturbations after the acceptance matrix is satisfied;
-- branding work beyond a functional README and a restrained Ailumetra attribution.
+- branding work beyond a functional README and a restrained AlvenX attribution.
 
 ## 6. Acceptance gates
 
@@ -182,9 +183,9 @@ integration will reveal the minimum boundary based on evidence rather than predi
 - Functional project name: **Browser Agent Regression**.
 - Repository: `BrowserAgentRegression`.
 - Python distribution and CLI: `browser-agent-regression`.
-- Series attribution: **Ailumetra**, secondary only.
+- Series attribution: **AlvenX**, secondary only.
 - Series standard: **AOS-0.1**, tracked in
-  [`docs/ailumetra-conformance.md`](docs/ailumetra-conformance.md).
+  [`docs/alvenx-conformance.md`](docs/alvenx-conformance.md).
 
 This lets developers discover the repository by its function while preserving the option for
-Ailumetra to become a future studio or open-source series.
+AlvenX to become a future studio or open-source series.
