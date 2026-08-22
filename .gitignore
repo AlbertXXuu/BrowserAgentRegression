@@ -9,6 +9,7 @@ dist/
 playwright-report/
 test-results/
 .playwright-cli/
+runs/
 .env
 .env.*
 !.env.example

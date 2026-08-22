@@ -272,7 +272,7 @@ def build_report(
     run_identity: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summaries = summarize(attempts)
-    regressions = find_regressions(summaries) if command == "calibrate" else []
+    regressions = find_regressions(summaries) if command in {"calibrate", "demo"} else []
     fixture_directory = Path(__file__).with_name("fixtures")
     fixture_names = {
         name

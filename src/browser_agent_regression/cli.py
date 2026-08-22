@@ -9,7 +9,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 from threading import Event
-from typing import cast
+from typing import Any, cast
 
 from playwright.sync_api import sync_playwright
 
@@ -118,6 +118,15 @@ def _calibrate(args: argparse.Namespace) -> int:
     )
     _write_report(report, args.output)
 
+    clean_parity, target_regressions = _calibration_status(report, tasks)
+    return 0 if target_regressions and clean_parity else 1
+
+
+def _calibration_status(
+    report: dict[str, Any], tasks: list[TaskId]
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Return whether clean behavior matches and meaningful regressions were detected."""
+
     summaries = {
         (summary["task_id"], summary["driver"], summary["variant"]): summary
         for summary in report["summaries"]
@@ -127,14 +136,61 @@ def _calibrate(args: argparse.Namespace) -> int:
         == summaries[(task_id, "popup-blind", "clean")]["success_rate"]
         for task_id in tasks
     )
-    target_regression = any(
-        regression["variant"] == "popup-overlay"
+    target_regressions = [
+        regression
+        for regression in report["regressions"]
+        if regression["variant"] == "popup-overlay"
         and regression["baseline_success_rate"] == 1.0
         and regression["delta"] <= -0.30
         and regression["failure_checkpoint_agreement"] >= 0.80
-        for regression in report["regressions"]
+    ]
+    return clean_parity, target_regressions
+
+
+def _demo(args: argparse.Namespace) -> int:
+    tasks = _tasks(args.task)
+    variants: list[Variant] = ["clean", "popup-overlay"]
+    print("Running local synthetic demo: no API key, model account, or paid API call.")
+    attempts, browser_version = _run_matrix(
+        drivers=["reference", "popup-blind"],
+        tasks=tasks,
+        variants=variants,
+        runs=args.runs,
+        headed=args.headed,
     )
-    return 0 if target_regression and clean_parity else 1
+    report = build_report(
+        attempts,
+        command="demo",
+        runs=args.runs,
+        tasks=tasks,
+        variants=variants,
+        browser_version=browser_version,
+    )
+    _write_report(report, args.output)
+
+    clean_parity, regressions = _calibration_status(report, tasks)
+    regressions_by_task = {regression["task_id"]: regression for regression in regressions}
+    for task_id in tasks:
+        regression = regressions_by_task.get(task_id)
+        if regression is None:
+            print(f"MISS {task_id}: expected popup-overlay regression was not detected.")
+            continue
+        print(
+            f"PASS {task_id}: clean parity preserved; popup-overlay regression localized to "
+            f"{regression['failed_checkpoint']}."
+        )
+
+    passed = clean_parity and set(regressions_by_task) == set(tasks)
+    print(
+        f"Demo result: {'PASS' if passed else 'FAIL'}; "
+        f"{len(regressions_by_task)}/{len(tasks)} "
+        "controlled regressions detected."
+    )
+    print(
+        "Scope: synthetic harness calibration only; this is not a model or browser-agent "
+        "benchmark result."
+    )
+    return 0 if passed else 1
 
 
 def _resolve_deepseek_api_key() -> str:
@@ -278,6 +334,15 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run local regression fixtures for browser agents.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    demo = subparsers.add_parser(
+        "demo", help="Run the zero-key local regression demonstration."
+    )
+    demo.add_argument("--runs", type=int, default=1)
+    demo.add_argument("--task", action="append", choices=TASKS)
+    demo.add_argument("--output", type=Path, default=Path("runs/demo-report.json"))
+    demo.add_argument("--headed", action="store_true")
+    demo.set_defaults(handler=_demo)
 
     oracle = subparsers.add_parser("oracle", help="Check deterministic fixture stability.")
     _add_run_arguments(oracle, default_runs=30)

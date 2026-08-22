@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="docs/assets/ailumetra-wordmark.svg" width="320" alt="Ailumetra — Agent Reliability">
+  <img src="docs/assets/alvenx-wordmark.svg" width="320" alt="AlvenX — Agent Reliability">
 </p>
 
 # Browser Agent Regression
 
-**Browser Agent Regression 是 Ailumetra 系列中的开源浏览器 Agent 可靠性项目。**
+**Browser Agent Regression 是 AlvenX 系列中的开源浏览器 Agent 可靠性项目。**
 
 [![CI](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/workflows/ci.yml/badge.svg)](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB)
@@ -23,8 +23,32 @@ JSON 回归报告。
 > 两位独立开发者运行仍待验证。只有 [PROJECT.md](PROJECT.md) 中所有 Gate 均通过，
 > Phase 0 才是 **GO**。在此之前，这个仓库仍是一个可证伪的项目假设，不是完成品。
 
-仓库通过 [AOS-0.1 符合性记录](docs/ailumetra-conformance.md)跟踪系列标准，但不会因此
+仓库通过 [AOS-0.1 符合性记录](docs/alvenx-conformance.md)跟踪系列标准，但不会因此
 扩大 Phase 0 范围。
+
+## 零 Key 快速开始
+
+支持 Python 3.11–3.13。先创建虚拟环境：
+
+```bash
+python -m venv .venv
+```
+
+在 PowerShell 中使用 `.venv\Scripts\Activate.ps1` 激活环境；macOS/Linux 使用
+`source .venv/bin/activate`。然后运行：
+
+```bash
+python -m pip install -e ".[dev]"
+python -m playwright install chromium
+browser-agent-regression demo
+```
+
+`demo` 不需要 API Key、模型账号、付费请求或外部模型服务。它会运行 12 次确定性本地
+尝试、打印简短解释，并把完整证据写入 `runs/demo-report.json`。预期结果是在保持 clean
+行为一致的同时定位三个受控回归。
+
+这是合成 runner 校准，不是 AI Agent benchmark。首次安装可能需要下载 Chromium，
+之后的 demo 在本地运行。
 
 ## Phase 0 校准证据
 
@@ -92,23 +116,9 @@ JSON 回归报告。
 popup-blind driver 用来证明 runner 能区分真实回归与 fixture 不稳定。两者都不是 AI
 Agent benchmark 结果。
 
-## 快速开始
+## 更深入的本地检查
 
-支持 Python 3.11–3.13。
-
-```bash
-python -m venv .venv
-```
-
-在 PowerShell 中运行 `.venv\Scripts\Activate.ps1`，或在 macOS/Linux 中运行
-`source .venv/bin/activate` 激活环境，然后安装项目与浏览器：
-
-```bash
-python -m pip install -e ".[dev]"
-python -m playwright install chromium
-```
-
-验证 fixture 与 Oracle 的稳定性：
+运行 Phase 0 证据采用的更严格 fixture 稳定性检查：
 
 ```bash
 browser-agent-regression oracle --runs 30
@@ -133,6 +143,8 @@ browser-agent-regression serve
 ```
 
 ## 可选真实 Agent：Browser Use + DeepSeek
+
+本节不属于快速开始；只有明确希望发起付费外部模型请求时才需要使用。
 
 安装隔离的 Agent 依赖，先运行一次付费测试：
 
@@ -167,4 +179,4 @@ Apache-2.0。
 
 ---
 
-Ailumetra 开源项目。功能项目名独立于系列品牌。
+AlvenX 开源项目。功能项目名独立于系列品牌。
