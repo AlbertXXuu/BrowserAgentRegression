@@ -1,0 +1,658 @@
+{
+  "schema_version": "1.0",
+  "protocol_id": "browser-agent-regression-controlled-ui-v1",
+  "tool_version": "1.0.0",
+  "evidence_kind": "synthetic-calibration",
+  "created_at": "2026-08-23T20:49:56.402396+00:00",
+  "task_ids": [
+    "checkout.basic.v1",
+    "catalog.find-and-save.v1",
+    "preferences.notifications.v1"
+  ],
+  "command": "oracle",
+  "environment": {
+    "python": "3.11.0",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "playwright": "1.62.0",
+    "browser": "151.0.7922.34"
+  },
+  "fixture_sha256": {
+    "catalog.html": "f61aed9f802a99929ad1042fb665c522a86313a67cdbc21242860fd0492ae26d",
+    "catalog.json": "e806ef2ac25c771bdde721cf84c7f13d1ccb0268c34e535d874614304693cc96",
+    "checkout.html": "7db180d755f8c561df762281d8091d904f727f5fb8c909d78dab874035acf71e",
+    "checkout.json": "20c09036648bf66678c05a6e470470019c7f23f11c57450a746309cf28e43d20",
+    "preferences.html": "68dc9e973b761f9c1b0c68f016e1751d3fdf0cebecd7650058fbb60f997670ce",
+    "preferences.json": "cd1badbb9d7fcd1760fa4a4cd1db92dcb3a72cab9410422c2e1ca200a47d076c"
+  },
+  "configuration": {
+    "runs_per_driver_task_variant": 3,
+    "tasks": [
+      "checkout.basic.v1",
+      "catalog.find-and-save.v1",
+      "preferences.notifications.v1"
+    ],
+    "variants": [
+      "clean",
+      "popup-overlay",
+      "delayed-render",
+      "layout-shift"
+    ]
+  },
+  "summaries": [
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "runs": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    }
+  ],
+  "regressions": [],
+  "attempts": [
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 185.35,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 109.423,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 92.556,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 124.747,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 141.258,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 126.543,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 907.067,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 912.997,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 922.132,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 87.991,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 107.398,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "checkout.basic.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 107.087,
+      "checkpoints": {
+        "checkout.email.accepted": true,
+        "checkout.shipping.selected": true,
+        "checkout.confirmed": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 149.638,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 156.614,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 170.691,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 191.645,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 193.566,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 191.761,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 976.593,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 976.023,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 974.983,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 193.247,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 185.612,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "catalog.find-and-save.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 224.391,
+      "checkpoints": {
+        "catalog.query.applied": true,
+        "catalog.product.opened": true,
+        "catalog.product.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 131.369,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 124.021,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 127.65,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 157.618,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 161.657,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "popup-overlay",
+      "passed": true,
+      "duration_ms": 152.171,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 949.066,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 936.523,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "delayed-render",
+      "passed": true,
+      "duration_ms": 938.258,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 161.835,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 156.575,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    },
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "reference",
+      "variant": "layout-shift",
+      "passed": true,
+      "duration_ms": 157.2,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    }
+  ]
+}

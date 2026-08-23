@@ -5,14 +5,18 @@ import asyncio
 import getpass
 import json
 import os
+import platform
 import sys
 from collections.abc import Callable
+from importlib.metadata import version
 from pathlib import Path
 from threading import Event
 from typing import Any, cast
 
+from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
+from browser_agent_regression import __version__
 from browser_agent_regression.runner import (
     TASK_FIXTURES,
     TASKS,
@@ -23,6 +27,7 @@ from browser_agent_regression.runner import (
     Variant,
     build_report,
     run_attempt,
+    validate_report,
 )
 from browser_agent_regression.server import FixtureServer
 
@@ -320,6 +325,54 @@ def _serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _doctor(args: argparse.Namespace) -> int:
+    del args
+    print(f"browser-agent-regression={__version__}")
+    print(f"python={platform.python_version()}")
+    with FixtureServer() as server, sync_playwright() as playwright:
+        executable = Path(playwright.chromium.executable_path)
+        print(f"playwright={version('playwright')}")
+        print(f"chromium_executable={executable}")
+        if not executable.is_file():
+            print("chromium=missing", file=sys.stderr)
+            print(
+                "Install it with: python -m playwright install chromium",
+                file=sys.stderr,
+            )
+            return 1
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            page = browser.new_page()
+            response = page.goto(server.url(TASK_FIXTURES[TASKS[0]]))
+            if response is None or not response.ok:
+                print("fixture_server=FAIL", file=sys.stderr)
+                return 1
+            browser_version = browser.version
+        finally:
+            browser.close()
+        if not server.url(TASK_FIXTURES[TASKS[0]]).startswith("http://127.0.0.1:"):
+            print("fixture_server=FAIL", file=sys.stderr)
+            return 1
+    print(
+        f"chromium=ready version={browser_version} tasks={len(TASKS)} "
+        f"variants={len(VARIANTS)}"
+    )
+    return 0
+
+
+def _verify(args: argparse.Namespace) -> int:
+    try:
+        report = json.loads(args.report.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON in {args.report}: {exc}") from exc
+    validate_report(report)
+    print(
+        f"PASS schema={report['schema_version']} command={report['command']} "
+        f"attempts={len(report['attempts'])}"
+    )
+    return 0
+
+
 def _add_run_arguments(parser: argparse.ArgumentParser, *, default_runs: int) -> None:
     parser.add_argument("--runs", type=int, default=default_runs)
     parser.add_argument("--task", action="append", choices=TASKS)
@@ -333,6 +386,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="browser-agent-regression",
         description="Run local regression fixtures for browser agents.",
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     demo = subparsers.add_parser(
@@ -369,6 +423,15 @@ def build_parser() -> argparse.ArgumentParser:
     serve = subparsers.add_parser("serve", help="Serve fixtures for manual inspection.")
     serve.add_argument("--port", type=int, default=8765)
     serve.set_defaults(handler=_serve)
+
+    doctor = subparsers.add_parser(
+        "doctor", help="Check the local runtime, Chromium, and fixture server."
+    )
+    doctor.set_defaults(handler=_doctor)
+
+    verify = subparsers.add_parser("verify", help="Validate a JSON evidence report.")
+    verify.add_argument("--report", type=Path, required=True)
+    verify.set_defaults(handler=_verify)
     return parser
 
 
@@ -383,4 +446,19 @@ def main(argv: list[str] | None = None) -> int:
         required_variants = {"clean", "popup-overlay"}
         if not required_variants.issubset(args.variant):
             parser.error("calibrate --variant must include clean and popup-overlay")
-    return int(args.handler(args))
+    try:
+        return int(args.handler(args))
+    except PlaywrightError as exc:
+        message = " ".join(str(exc).split())
+        if "Executable doesn't exist" in message:
+            print(
+                "error: the matching Chromium build is not installed; run "
+                "`python -m playwright install chromium`",
+                file=sys.stderr,
+            )
+        else:
+            print(f"error: Playwright failed: {message[:500]}", file=sys.stderr)
+        return 2
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2

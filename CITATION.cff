@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use Browser Agent Regression, please cite this software release."
+title: "Browser Agent Regression: Local-first controlled UI regression testing for browser agents"
+type: software
+authors:
+  - family-names: "Xu"
+    given-names: "Albert"
+    alias: "AlbertXXuu"
+version: 1.0.0
+date-released: 2026-08-24
+url: "https://github.com/AlbertXXuu/BrowserAgentRegression"
+repository-code: "https://github.com/AlbertXXuu/BrowserAgentRegression"
+license: Apache-2.0

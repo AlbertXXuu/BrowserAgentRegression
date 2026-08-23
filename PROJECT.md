@@ -1,9 +1,17 @@
 # Project Charter — Browser Agent Regression
 
-**Status:** Phase 0 validation<br>
+**Status:** v1 technical release; external-adoption validation remains open<br>
 **Decision date:** 2026-08-15<br>
 **Time box:** 5–7 days<br>
 **Owner:** AlbertXXuu
+
+## v1 decision update — 2026-08-24
+
+The deterministic fixtures, synthetic regression calibration, evidence contract, package, and one
+optional real-agent feasibility path have passed their technical gates. The owner authorized a v1
+engineering release while preserving the strongest unresolved fact: two independent target-developer
+runs have not occurred, so external demand is not validated. v1 therefore freezes the local tool and
+its evidence protocol; it does not convert the original market hypothesis into a proven claim.
 
 ## 1. Decision
 

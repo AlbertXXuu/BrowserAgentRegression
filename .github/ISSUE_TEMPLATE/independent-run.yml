@@ -1,0 +1,80 @@
+name: Independent v1 run
+description: Share a successful or blocked clean-environment run of the v1 offline workflow.
+title: "[Independent run]: "
+labels:
+  - independent-run
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Successful and blocked runs are both useful. Do not paste credentials, usernames, private URLs, cookies, or absolute local paths. Validate attached JSON with `browser-agent-regression verify` first.
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - Completed doctor and demo
+        - Completed doctor only
+        - Installed, but a command failed
+        - Could not complete installation
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Browser-agent context
+      description: Briefly describe what you build, evaluate, study, or maintain.
+      placeholder: Student evaluating Browser Use, or developer maintaining a browser agent
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, and CPU architecture; omit usernames and paths.
+      placeholder: Windows 11, Python 3.12, x86-64
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Tested version or revision
+      placeholder: v1.0.0 or a short Git commit
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Result or safe evidence
+      description: Summarize the result or attach a redacted, verified JSON report/error.
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: First point of friction
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Would this fit an upgrade workflow?
+      description: Explain whether you would run this before changing a model, prompt, harness, or framework.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Validation and privacy checks
+      options:
+        - label: I am not the repository maintainer and ran this on my own machine.
+          required: true
+        - label: I removed credentials, usernames, private URLs, cookies, and absolute local paths.
+          required: true

@@ -2,8 +2,7 @@
 
 ## Supported versions
 
-Browser Agent Regression is pre-release Phase 0 software. Security fixes apply to the current
-`main` branch only.
+Security fixes apply to the latest `1.x` release and the current `main` branch.
 
 ## Reporting a vulnerability
 
@@ -20,6 +19,6 @@ Never attach API keys, session cookies, private URLs, or unredacted agent traces
 - Deterministic tests require no model credential.
 - The optional DeepSeek command accepts a key only from `DEEPSEEK_API_KEY` or hidden interactive
   input; it does not place the key in command arguments or evidence.
-- The real-agent path runs the pinned Browser Use dependency against repository-owned fixtures;
-  Phase 0 does not execute arbitrary third-party agent commands.
+- The real-agent path runs the bounded Browser Use dependency against repository-owned fixtures;
+  v1 does not execute arbitrary third-party agent commands.
 - Generated evidence must not contain credentials or browser session data.

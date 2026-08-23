@@ -4,179 +4,91 @@
 
 # Browser Agent Regression
 
-**Browser Agent Regression 是 AlvenX 系列中的开源浏览器 Agent 可靠性项目。**
+[English](README.md) · [证据协议](docs/evidence-schema.md) · [v1 证据](docs/evidence/v1.0.0-calibration.json)
 
-[![CI](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/workflows/ci.yml/badge.svg)](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB)
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+Browser Agent Regression 是一个本地优先的浏览器 Agent 回归工具，用来回答：**一次模型、
+提示词、工具或框架变更，究竟提高了可靠性，还是悄悄破坏了原本能通过的工作流？**
 
-[English](README.md)
+v1 离线核心包含三个可重置任务、四种语义不变 UI 变体、独立检查点评分、重复的
+baseline/candidate 比较、首个失败点定位和可验证 JSON 证据。不需要 API Key 或托管服务。
 
-这是一个 local-first 实验，用来回答一个实际问题：**浏览器 Agent 更新后是真的更可靠了，
-还是悄悄破坏了原本能够完成的工作流？**
+## 快速开始
 
-项目目前处于 **5–7 天 Phase 0 验证期**，还不是通用框架。当前可运行切片包含确定性
-结账、商品查找和通知偏好任务、语义不变的受控 UI 扰动、检查点级评分、重复运行和
-JSON 回归报告。
+支持 Python 3.11–3.13。
 
-> 三个必需任务均已完成，确定性 fixture、合成回归与真实 Agent 可行性 Gate 已通过；
-> 两位独立开发者运行仍待验证。只有 [PROJECT.md](PROJECT.md) 中所有 Gate 均通过，
-> Phase 0 才是 **GO**。在此之前，这个仓库仍是一个可证伪的项目假设，不是完成品。
-
-仓库通过 [AOS-0.1 符合性记录](docs/alvenx-conformance.md)跟踪系列标准，但不会因此
-扩大 Phase 0 范围。
-
-## 零 Key 快速开始
-
-支持 Python 3.11–3.13。先创建虚拟环境：
-
-```bash
+```powershell
 python -m venv .venv
-```
-
-在 PowerShell 中使用 `.venv\Scripts\Activate.ps1` 激活环境；macOS/Linux 使用
-`source .venv/bin/activate`。然后运行：
-
-```bash
+.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 python -m playwright install chromium
+
+browser-agent-regression doctor
 browser-agent-regression demo
 ```
 
-`demo` 不需要 API Key、模型账号、付费请求或外部模型服务。它会运行 12 次确定性本地
-尝试、打印简短解释，并把完整证据写入 `runs/demo-report.json`。预期结果是在保持 clean
-行为一致的同时定位三个受控回归。
+`demo` 会运行 12 次本地尝试并写入 `runs/demo-report.json`。预期结果是 clean 行为保持一致，
+并且人为设置的 popup-blind candidate 在三个任务上各产生一个能定位到首个检查点的回归。
+这是 runner 校准，不是真实 Agent benchmark。
 
-这是合成 runner 校准，不是 AI Agent benchmark。首次安装可能需要下载 Chromium，
-之后的 demo 在本地运行。
+验证新报告或仓库内 v1 证据：
 
-## Phase 0 校准证据
-
-第三个切片在本地同一份源码快照上重复运行。确定性 reference Oracle 在三个任务的所有当前
-条件下均完成 30/30 次：
-
-| 任务 | 条件 | Reference Oracle | 校准 Baseline | 校准 Candidate |
-|---|---|---:|---:|---:|
-| `checkout.basic.v1` | `clean` | 30/30 | 10/10 | 10/10 |
-| `checkout.basic.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
-| `checkout.basic.v1` | `delayed-render` | 30/30 | — | — |
-| `checkout.basic.v1` | `layout-shift` | 30/30 | — | — |
-| `catalog.find-and-save.v1` | `clean` | 30/30 | 10/10 | 10/10 |
-| `catalog.find-and-save.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
-| `catalog.find-and-save.v1` | `delayed-render` | 30/30 | — | — |
-| `catalog.find-and-save.v1` | `layout-shift` | 30/30 | — | — |
-| `preferences.notifications.v1` | `clean` | 30/30 | 10/10 | 10/10 |
-| `preferences.notifications.v1` | `popup-overlay` | 30/30 | 10/10 | **0/10** |
-| `preferences.notifications.v1` | `delayed-render` | 30/30 | — | — |
-| `preferences.notifications.v1` | `layout-shift` | 30/30 | — | — |
-
-人为设置的 popup-blind candidate 在三个任务的 clean 条件下保持成功率，但在 overlay
-条件下均下降 100 个百分点；所有失败均首先定位到对应任务的预期检查点：
-`checkout.email.accepted`、`catalog.query.applied` 或
-`preferences.product_updates.disabled`。可以直接检查保存的
-[Oracle 证据](docs/evidence/phase0-slice-03-oracle.json)与
-[校准证据](docs/evidence/phase0-slice-03-calibration.json)。
-
-这些是**合成 runner 校准结果**，不是模型或真实浏览器 Agent 的 benchmark 分数。它们只用来
-证明 fixture 稳定且 runner 能检测回归，然后才值得接入真实 Agent。
-
-## Gate C 真实 Agent 可行性证据
-
-在 revision `b817b68` 上，Browser Use 0.13.7 与 `deepseek-v4-flash` 对每个任务各完成一次
-经过认证的 clean 运行。独立 DOM 评分结果为：
-
-| 任务 | 独立结果 | 耗时 |
-|---|---:|---:|
-| `checkout.basic.v1` | 1/1 | 45.36 秒 |
-| `catalog.find-and-save.v1` | 1/1 | 33.69 秒 |
-| `preferences.notifications.v1` | 1/1 | 31.07 秒 |
-
-可以检查 [Gate C 报告](docs/evidence/phase0-deepseek-gate-c-02.json)及其
-[结果解释](docs/evidence/phase0-deepseek-gate-c-02.md)。这证明集成可行，但不证明重复运行
-可靠性：三个轨迹都出现了可恢复的空动作或格式错误，checkout 甚至在 DOM 目标已经通过后
-错误地自报失败。项目以独立评分器为准，不以 Agent 自述为准。
-
-## 为什么做这个项目
-
-浏览器 Agent Demo 通常只能说明任务曾经成功一次。升级决策需要更强的证据：相同任务、
-重复运行、受控变化、明确检查点，以及 baseline 与 candidate 的成对比较。
-
-这个仓库会先验证这种更小的开发者工作流是否有用，再决定是否投入构建正式工具。
-
-## 当前可运行切片
-
-内置结账、商品查找并收藏、通知偏好设置任务都包含四种条件：
-
-- `clean`
-- `popup-overlay`
-- `delayed-render`
-- `layout-shift`
-
-所有条件都保持任务语义不变。reference driver 是确定性 Oracle；人为降级的
-popup-blind driver 用来证明 runner 能区分真实回归与 fixture 不稳定。两者都不是 AI
-Agent benchmark 结果。
-
-## 更深入的本地检查
-
-运行 Phase 0 证据采用的更严格 fixture 稳定性检查：
-
-```bash
-browser-agent-regression oracle --runs 30
+```powershell
+browser-agent-regression verify --report runs\demo-report.json
+browser-agent-regression verify --report docs\evidence\v1.0.0-calibration.json
 ```
 
-诊断单个 fixture 时可以只运行一个任务：
+## v1 稳定边界
 
-```bash
-browser-agent-regression oracle --task catalog.find-and-save.v1 --runs 3
+- CLI：`demo`、`oracle`、`calibrate`、`verify`、`doctor`、`serve` 和可选 `deepseek`。
+- 固定的任务 ID、变体 ID 和有序检查点合同。
+- 证据 schema `1.0`、协议 ID、fixture 哈希、环境、逐次结果、汇总、回归和首个失败点。
+- 退出码：`0` 表示通过，`1` 表示实验完成但未满足验收，`2` 表示证据或运行环境错误。
+
+验证器会从逐次结果重新计算汇总与回归、检查每个检查点合同、核对已安装 fixture 的
+SHA-256，并拒绝凭据形态字段。历史 schema `0.2` 报告仍可验证。
+
+## 内置实验
+
+```powershell
+# Reference driver 在所有任务和变体上的稳定性
+browser-agent-regression oracle --runs 30 --output runs\oracle.json
+
+# Reference 与 popup-blind candidate 的受控对照
+browser-agent-regression calibrate --runs 10 --output runs\calibration.json
 ```
 
-运行合成回归校准实验：
+仓库内 v1 校准证据对每个 baseline/candidate/任务/变体单元重复三次。clean 页面保持一致；
+popup overlay 下 candidate 的三个任务均从 100% 降至 0%，首个失败检查点的一致率均为 100%。
+配套 oracle 报告覆盖全部四种变体，两份报告都由 CI 调用公开 `verify` 命令验收。
 
-```bash
-browser-agent-regression calibrate --runs 10 --output calibration.json
-```
+## 可选真实 Agent
 
-手动打开本地 fixture：
+Browser Use + DeepSeek 适配器不属于离线核心，可能产生付费 API 请求：
 
-```bash
-browser-agent-regression serve
-```
-
-## 可选真实 Agent：Browser Use + DeepSeek
-
-本节不属于快速开始；只有明确希望发起付费外部模型请求时才需要使用。
-
-安装隔离的 Agent 依赖，先运行一次付费测试：
-
-```bash
+```powershell
 python -m pip install -e ".[agent]"
-browser-agent-regression deepseek --task preferences.notifications.v1 --runs 1 --headed
+browser-agent-regression deepseek `
+  --task preferences.notifications.v1 `
+  --runs 1 `
+  --headed
 ```
 
-如果没有设置 `DEEPSEEK_API_KEY`，CLI 会引导你前往官方平台，并通过隐藏输入接收 Key，
-不会将其保存。运行三个任务前请阅读完整的 [DeepSeek 安装与安全用 Key 教程](docs/deepseek.zh-CN.md)。
-真实 Agent 由独立 DOM 检查点评分，并与上面的合成校准严格区分。
+运行前先阅读 [DeepSeek 安装与安全用 Key 指南](docs/deepseek.zh-CN.md)。凭据只从环境变量或
+隐藏输入读取，不会写入证据。
 
-## 帮助验证 Phase 0
+## 边界
 
-如果你正在维护、评估或学习浏览器 Agent，请在自己的电脑上 clone 仓库并运行上面的两个
-命令，然后提交
-[Phase 0 独立运行反馈](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=phase0-run.yml)。
-
-成功和受阻的报告都有价值。只有非维护者提供了测试 revision、环境、命令、安全证据和具体
-工作流反馈，才计入外部需求 Gate；Star 和页面浏览量不计入。
+v1 表示本地 runner、CLI、Python 包和证据合同已经可以稳定供外部使用，不表示需求已经得到
+验证。非作者独立运行仍是开放的采用问题；项目也不声称替代 WebArena、BrowserGym 或团队
+内部 eval。没有真实使用证据前，不建设托管看板、账户系统、通用 provider 框架或遥测。
 
 ## 开发检查
 
-```bash
+```powershell
 python -m ruff check .
 python -m pytest
+python scripts\check_repository.py
+python -m build
 ```
 
-## 许可证
-
-Apache-2.0。
-
----
-
-AlvenX 开源项目。功能项目名独立于系列品牌。
+Apache-2.0 许可证。Browser Agent Regression 是 [AlvenX](https://alvenx.com) 开源项目。

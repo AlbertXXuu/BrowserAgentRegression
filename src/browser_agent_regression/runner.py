@@ -13,7 +13,11 @@ from typing import Any, Literal
 from playwright.sync_api import Browser, Page
 from playwright.sync_api import Error as PlaywrightError
 
+from browser_agent_regression import __version__
 from browser_agent_regression.server import FixtureServer
+
+SCHEMA_VERSION = "1.0"
+PROTOCOL_ID = "browser-agent-regression-controlled-ui-v1"
 
 Variant = Literal["clean", "popup-overlay", "delayed-render", "layout-shift"]
 Driver = Literal[
@@ -295,7 +299,9 @@ def build_report(
         configuration["run_identity"] = run_identity
 
     return {
-        "schema_version": "0.2",
+        "schema_version": SCHEMA_VERSION,
+        "protocol_id": PROTOCOL_ID,
+        "tool_version": __version__,
         "evidence_kind": evidence_kind,
         "created_at": datetime.now(UTC).isoformat(),
         "task_ids": tasks,
@@ -312,3 +318,133 @@ def build_report(
         "regressions": regressions,
         "attempts": [asdict(attempt) for attempt in attempts],
     }
+
+
+def validate_report(report: dict[str, Any]) -> None:
+    """Validate v1 evidence and retained 0.2 Phase 0 evidence.
+
+    Validation checks the report's internal accounting and binds it to the
+    packaged fixture bytes. Durations, timestamps, and browser versions are
+    evidence, but are intentionally not expected to be reproducible byte for byte.
+    """
+
+    def require(condition: bool, message: str) -> None:
+        if not condition:
+            raise ValueError(message)
+
+    schema = report.get("schema_version")
+    require(schema in {"0.2", SCHEMA_VERSION}, f"unsupported schema version: {schema}")
+    if schema == SCHEMA_VERSION:
+        require(report.get("protocol_id") == PROTOCOL_ID, "protocol identifier mismatch")
+        require(isinstance(report.get("tool_version"), str), "tool version is missing")
+    require(
+        report.get("command") in {"demo", "oracle", "calibrate", "deepseek"},
+        "unknown report command",
+    )
+    require(
+        report.get("evidence_kind") in {"synthetic-calibration", "real-agent"},
+        "unknown evidence kind",
+    )
+    created_at = report.get("created_at")
+    require(isinstance(created_at, str), "created_at must be an ISO timestamp")
+    try:
+        datetime.fromisoformat(created_at)
+    except ValueError as exc:
+        raise ValueError("created_at must be an ISO timestamp") from exc
+    environment = report.get("environment")
+    require(isinstance(environment, dict), "environment must be an object")
+    require(
+        {"python", "platform", "playwright", "browser"}.issubset(environment),
+        "environment fields are incomplete",
+    )
+
+    tasks = report.get("task_ids")
+    require(isinstance(tasks, list) and bool(tasks), "task_ids must be a non-empty list")
+    require(all(task in TASKS for task in tasks), "report contains an unknown task")
+    require(len(tasks) == len(set(tasks)), "task_ids contains duplicates")
+
+    configuration = report.get("configuration")
+    require(isinstance(configuration, dict), "configuration must be an object")
+    require(configuration.get("tasks") == tasks, "configuration tasks do not match task_ids")
+    variants = configuration.get("variants")
+    require(isinstance(variants, list) and bool(variants), "configuration variants are missing")
+    require(all(variant in VARIANTS for variant in variants), "report contains an unknown variant")
+    require(len(variants) == len(set(variants)), "configuration variants contains duplicates")
+    runs = configuration.get("runs_per_driver_task_variant")
+    require(isinstance(runs, int) and runs >= 1, "run count must be a positive integer")
+
+    raw_attempts = report.get("attempts")
+    require(isinstance(raw_attempts, list) and bool(raw_attempts), "attempts must be non-empty")
+    attempts: list[Attempt] = []
+    for index, raw in enumerate(raw_attempts):
+        require(isinstance(raw, dict), f"attempt {index} must be an object")
+        try:
+            attempt = Attempt(**raw)
+        except TypeError as exc:
+            raise ValueError(f"attempt {index} has an invalid shape: {exc}") from exc
+        require(attempt.task_id in tasks, f"attempt {index} references an undeclared task")
+        require(attempt.variant in variants, f"attempt {index} references an undeclared variant")
+        require(attempt.duration_ms >= 0.0, f"attempt {index} has a negative duration")
+        require(
+            attempt.driver
+            in {
+                "reference",
+                "popup-blind",
+                "browser-use/deepseek-v4-flash",
+                "browser-use/deepseek-v4-pro",
+            },
+            f"attempt {index} references an unknown driver",
+        )
+        require(
+            tuple(attempt.checkpoints) == TASK_CHECKPOINTS[attempt.task_id],
+            f"attempt {index} checkpoint contract mismatch",
+        )
+        first_failed = next(
+            (name for name, passed in attempt.checkpoints.items() if not passed), None
+        )
+        require(
+            attempt.first_failed_checkpoint == first_failed,
+            f"attempt {index} first-failure checkpoint mismatch",
+        )
+        require(
+            attempt.passed == (first_failed is None and attempt.error is None),
+            f"attempt {index} pass flag is inconsistent",
+        )
+        attempts.append(attempt)
+
+    require(report.get("summaries") == summarize(attempts), "summary accounting mismatch")
+    expected_regressions = (
+        find_regressions(summarize(attempts))
+        if report.get("command") in {"calibrate", "demo"}
+        else []
+    )
+    require(report.get("regressions") == expected_regressions, "regression accounting mismatch")
+
+    fixture_directory = Path(__file__).with_name("fixtures")
+    fixture_names = {
+        name
+        for task_id in tasks
+        for name in (
+            TASK_FIXTURES[task_id],
+            Path(TASK_FIXTURES[task_id]).with_suffix(".json").name,
+        )
+    }
+    expected_hashes = {
+        name: sha256((fixture_directory / name).read_bytes()).hexdigest()
+        for name in sorted(fixture_names)
+    }
+    require(report.get("fixture_sha256") == expected_hashes, "fixture hash mismatch")
+
+    def sensitive_keys(value: Any) -> list[str]:
+        if isinstance(value, dict):
+            found = [
+                str(key)
+                for key in value
+                if str(key).casefold() in {"api_key", "authorization", "token"}
+            ]
+            return found + [item for child in value.values() for item in sensitive_keys(child)]
+        if isinstance(value, list):
+            return [item for child in value for item in sensitive_keys(child)]
+        return []
+
+    require(not sensitive_keys(report), "report contains a credential-shaped field")

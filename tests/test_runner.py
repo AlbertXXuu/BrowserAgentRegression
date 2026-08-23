@@ -3,7 +3,16 @@ import json
 import pytest
 from playwright.sync_api import sync_playwright
 
-from browser_agent_regression.runner import TASKS, VARIANTS, Attempt, build_report, run_attempt
+from browser_agent_regression.runner import (
+    PROTOCOL_ID,
+    TASK_CHECKPOINTS,
+    TASKS,
+    VARIANTS,
+    Attempt,
+    build_report,
+    run_attempt,
+    validate_report,
+)
 from browser_agent_regression.server import FixtureServer
 
 
@@ -93,7 +102,9 @@ def test_calibration_detects_popup_regression_only() -> None:
         variants=["clean", "popup-overlay"],
     )
 
-    assert report["schema_version"] == "0.2"
+    assert report["schema_version"] == "1.0"
+    assert report["protocol_id"] == PROTOCOL_ID
+    assert report["tool_version"] == "1.0.0"
     assert report["task_ids"] == list(TASKS)
     assert set(report["fixture_sha256"]) == {
         "catalog.html",
@@ -145,7 +156,39 @@ def test_real_agent_report_preserves_identity_without_credentials() -> None:
         },
     )
 
-    assert report["schema_version"] == "0.2"
+    assert report["schema_version"] == "1.0"
     assert report["evidence_kind"] == "real-agent"
     assert report["configuration"]["run_identity"]["agent"] == "browser-use"
     assert "api_key" not in json.dumps(report).lower()
+
+
+def _single_success_report() -> dict[str, object]:
+    attempt = Attempt(
+        task_id="checkout.basic.v1",
+        driver="reference",
+        variant="clean",
+        passed=True,
+        duration_ms=10.0,
+        checkpoints={name: True for name in TASK_CHECKPOINTS["checkout.basic.v1"]},
+        first_failed_checkpoint=None,
+        error=None,
+    )
+    return build_report(
+        [attempt],
+        command="oracle",
+        runs=1,
+        tasks=["checkout.basic.v1"],
+        variants=["clean"],
+    )
+
+
+def test_report_validator_accepts_a_consistent_report() -> None:
+    validate_report(_single_success_report())
+
+
+def test_report_validator_rejects_tampered_summary() -> None:
+    report = _single_success_report()
+    report["summaries"][0]["successes"] = 0
+
+    with pytest.raises(ValueError, match="summary accounting"):
+        validate_report(report)

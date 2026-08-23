@@ -5,6 +5,8 @@ dashboard.
 
 | File | Meaning | Expected result |
 |---|---|---|
+| `v1.0.0-oracle.json` | v1 reference driver, three repetitions across all tasks and variants | 36/36 pass; schema and fixture hashes verify |
+| `v1.0.0-calibration.json` | v1 reference/candidate comparison, three repetitions on clean and popup | clean parity; three localized popup regressions |
 | `phase0-slice-01-oracle.json` | 30 reference-oracle repetitions for each of four checkout conditions | 120/120 pass |
 | `phase0-slice-01-calibration.json` | 10 baseline and candidate repetitions on clean and popup conditions | clean parity; popup regression detected |
 | `phase0-slice-02-oracle.json` | 30 reference-oracle repetitions for two tasks under four conditions | 240/240 pass |
@@ -27,3 +29,7 @@ Slice 01 uses evidence schema `0.1`. Slices 02 and 03 use schema `0.2`, adding t
 to attempts, summaries, regressions, and configuration. All files are labelled
 `synthetic-calibration`: they validate the runner, not the quality of a model or agent framework.
 Real-agent evidence is labelled separately and includes failed runs.
+
+The two v1 files use schema `1.0` and are checked in CI with
+`browser-agent-regression verify --report <path>`. Schema `0.2` remains supported; schema `0.1`
+is retained only as historical provenance.
