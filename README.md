@@ -30,11 +30,16 @@ python -m playwright install chromium
 
 browser-agent-regression doctor
 browser-agent-regression demo
+browser-agent-regression studio
 ```
 
 The demo runs 12 local attempts and writes `runs/demo-report.json`. The expected result is clean
 parity plus one deliberately induced popup regression for each task, localized to the first failed
 checkpoint. This is harness calibration, not an AI-agent benchmark result.
+
+`studio` opens a loopback-only visual interface that follows the AlvenX product design language.
+It starts from the hash-checked committed evidence and can run the same zero-key demo from a liquid
+glass control without rewriting the committed report. See [Studio usage](docs/studio.md).
 
 Verify either a new report or the committed v1 evidence:
 
@@ -45,7 +50,8 @@ browser-agent-regression verify --report docs/evidence/v1.0.0-calibration.json
 
 ## What v1 freezes
 
-- CLI commands: `demo`, `oracle`, `calibrate`, `verify`, `doctor`, `serve`, and optional `deepseek`.
+- CLI commands: `demo`, `oracle`, `calibrate`, `verify`, `doctor`, `serve`, `studio`, and optional
+  `deepseek`.
 - Task IDs, variant IDs, and ordered checkpoint contracts documented in packaged JSON manifests.
 - Evidence schema `1.0`, protocol `browser-agent-regression-controlled-ui-v1`, fixture hashes,
   environment metadata, per-attempt outcomes, summaries, regressions, and first failures.

@@ -2,6 +2,15 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- Added a dependency-free, loopback-only `studio` command with the AlvenX product design language,
+  preserved v1 evidence visualization, and an in-memory zero-key demo control.
+- Bundled integrity-checked AlvenX masters, Instrument Sans, and a compact evidence fallback so the
+  Studio remains functional from an installed wheel.
+
 ## [1.0.0] - 2026-08-24
 
 ### Added
@@ -25,3 +34,4 @@ All notable changes are documented here. Releases use semantic versioning.
 - Phase 0 schema `0.1` files remain historical artifacts but are outside the v1 compatibility promise.
 
 [1.0.0]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.0.0
+[Unreleased]: https://github.com/AlbertXXuu/BrowserAgentRegression/compare/v1.0.0...HEAD

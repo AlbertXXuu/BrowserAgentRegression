@@ -24,11 +24,16 @@ python -m playwright install chromium
 
 browser-agent-regression doctor
 browser-agent-regression demo
+browser-agent-regression studio
 ```
 
 `demo` 会运行 12 次本地尝试并写入 `runs/demo-report.json`。预期结果是 clean 行为保持一致，
 并且人为设置的 popup-blind candidate 在三个任务上各产生一个能定位到首个检查点的回归。
 这是 runner 校准，不是真实 Agent benchmark。
+
+`studio` 会打开仅监听本机回环地址的可视化界面，遵循 AlvenX 官网产品设计语言。界面默认
+读取已提交证据，并可通过液态玻璃按钮运行同一套无 Key demo；它不会改写已提交报告。详见
+[Studio 使用说明](docs/studio.md)。
 
 验证新报告或仓库内 v1 证据：
 
@@ -39,7 +44,7 @@ browser-agent-regression verify --report docs\evidence\v1.0.0-calibration.json
 
 ## v1 稳定边界
 
-- CLI：`demo`、`oracle`、`calibrate`、`verify`、`doctor`、`serve` 和可选 `deepseek`。
+- CLI：`demo`、`oracle`、`calibrate`、`verify`、`doctor`、`serve`、`studio` 和可选 `deepseek`。
 - 固定的任务 ID、变体 ID 和有序检查点合同。
 - 证据 schema `1.0`、协议 ID、fixture 哈希、环境、逐次结果、汇总、回归和首个失败点。
 - 退出码：`0` 表示通过，`1` 表示实验完成但未满足验收，`2` 表示证据或运行环境错误。

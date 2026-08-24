@@ -373,6 +373,12 @@ def _verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _studio(args: argparse.Namespace) -> int:
+    from browser_agent_regression.studio import serve_studio
+
+    return serve_studio(host=args.host, port=args.port, open_browser=not args.no_open)
+
+
 def _add_run_arguments(parser: argparse.ArgumentParser, *, default_runs: int) -> None:
     parser.add_argument("--runs", type=int, default=default_runs)
     parser.add_argument("--task", action="append", choices=TASKS)
@@ -423,6 +429,14 @@ def build_parser() -> argparse.ArgumentParser:
     serve = subparsers.add_parser("serve", help="Serve fixtures for manual inspection.")
     serve.add_argument("--port", type=int, default=8765)
     serve.set_defaults(handler=_serve)
+
+    studio = subparsers.add_parser(
+        "studio", help="Open the local visual evidence and calibration interface."
+    )
+    studio.add_argument("--host", default="127.0.0.1")
+    studio.add_argument("--port", type=int, default=7870)
+    studio.add_argument("--no-open", action="store_true")
+    studio.set_defaults(handler=_studio)
 
     doctor = subparsers.add_parser(
         "doctor", help="Check the local runtime, Chromium, and fixture server."

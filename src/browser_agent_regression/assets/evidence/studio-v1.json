@@ -1,0 +1,39 @@
+{
+  "source": "calibrate",
+  "protocol": "browser-agent-regression-controlled-ui-v1",
+  "createdAt": "2026-08-23T20:50:17.306226+00:00",
+  "attemptCount": 36,
+  "taskCount": 3,
+  "variantCount": 4,
+  "regressionCount": 3,
+  "browser": "151.0.7922.34",
+  "tasks": [
+    {
+      "id": "checkout.basic.v1",
+      "label": "Checkout completion",
+      "cleanParity": true,
+      "baselineRate": 1.0,
+      "candidateRate": 0.0,
+      "firstFailure": "checkout.email.accepted",
+      "agreement": 1.0
+    },
+    {
+      "id": "catalog.find-and-save.v1",
+      "label": "Catalog find and save",
+      "cleanParity": true,
+      "baselineRate": 1.0,
+      "candidateRate": 0.0,
+      "firstFailure": "catalog.query.applied",
+      "agreement": 1.0
+    },
+    {
+      "id": "preferences.notifications.v1",
+      "label": "Notification preferences",
+      "cleanParity": true,
+      "baselineRate": 1.0,
+      "candidateRate": 0.0,
+      "firstFailure": "preferences.product_updates.disabled",
+      "agreement": 1.0
+    }
+  ]
+}

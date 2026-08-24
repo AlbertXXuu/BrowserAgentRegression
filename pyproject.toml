@@ -49,7 +49,14 @@ Repository = "https://github.com/AlbertXXuu/BrowserAgentRegression"
 Issues = "https://github.com/AlbertXXuu/BrowserAgentRegression/issues"
 
 [tool.setuptools.package-data]
-browser_agent_regression = ["fixtures/*.html", "fixtures/*.json"]
+browser_agent_regression = [
+  "fixtures/*.html",
+  "fixtures/*.json",
+  "assets/brand/*.svg",
+  "assets/evidence/*.json",
+  "assets/fonts/*.woff2",
+  "assets/fonts/*.txt",
+]
 
 [tool.pytest.ini_options]
 addopts = "-ra"

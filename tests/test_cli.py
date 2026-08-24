@@ -26,6 +26,14 @@ def test_demo_defaults_to_a_short_local_report() -> None:
     assert args.headed is False
 
 
+def test_studio_defaults_to_loopback_and_does_not_require_opening_a_browser() -> None:
+    args = build_parser().parse_args(["studio", "--no-open"])
+
+    assert args.host == "127.0.0.1"
+    assert args.port == 7870
+    assert args.no_open is True
+
+
 def test_version_is_exposed(capsys) -> None:
     with pytest.raises(SystemExit) as exc_info:
         build_parser().parse_args(["--version"])
