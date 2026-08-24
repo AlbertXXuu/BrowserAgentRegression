@@ -40,6 +40,9 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert "ambient" not in STUDIO_CSS.casefold()
     assert "border:1px solid rgb(71 105 148 / 18%)" in STUDIO_CSS
     assert "line-height:1.02" in STUDIO_CSS
+    assert "radial-gradient(circle at 12% 5%,rgb(147 197 253 / 42%),transparent 34%)" in STUDIO_CSS
+    assert ".boundary{border:1px solid rgb(255 255 255 / 68%)" in STUDIO_CSS
+    assert "backdrop-filter:blur(24px) saturate(148%)" in STUDIO_CSS
     assert 'id="demo-runs"' in INDEX_HTML
     assert "Run → compare → localize" in INDEX_HTML
 
