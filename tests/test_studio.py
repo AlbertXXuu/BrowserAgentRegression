@@ -47,6 +47,8 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert 'id="demo-runs"' in INDEX_HTML
     assert "Run → compare → localize" in INDEX_HTML
     assert "position:fixed" in STUDIO_CSS
+    assert ".site-header{position:fixed;z-index:100" in STUDIO_CSS
+    assert "0 24px 72px rgb(71 105 148 / 12%)" in STUDIO_CSS
     assert "syncNavigation" in STUDIO_JS
     assert "aria-current','location'" in STUDIO_JS
 
