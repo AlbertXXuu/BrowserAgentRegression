@@ -10,6 +10,7 @@ from browser_agent_regression.studio import (
     STUDIO_CSS,
     StudioAddress,
     StudioHTTPServer,
+    _validated_demo_runs,
     load_committed_evidence,
 )
 
@@ -37,6 +38,18 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert 'id="run-demo"' in INDEX_HTML
     assert 'aria-live="polite"' in INDEX_HTML
     assert "ambient" not in STUDIO_CSS.casefold()
+    assert "border:1px solid rgb(71 105 148 / 18%)" in STUDIO_CSS
+    assert "line-height:1.02" in STUDIO_CSS
+    assert 'id="demo-runs"' in INDEX_HTML
+    assert "Run → compare → localize" in INDEX_HTML
+
+
+def test_demo_repetition_control_is_bounded() -> None:
+    assert _validated_demo_runs(1) == 1
+    assert _validated_demo_runs(3) == 3
+    for value in (0, 4, True, "2"):
+        with pytest.raises(ValueError, match="runs"):
+            _validated_demo_runs(value)
 
 
 def test_studio_rejects_non_loopback_hosts() -> None:

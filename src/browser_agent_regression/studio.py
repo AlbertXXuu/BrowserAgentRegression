@@ -113,22 +113,29 @@ def _asset_bytes(relative: str) -> bytes:
     return payload
 
 
-def run_live_demo() -> dict[str, Any]:
+def _validated_demo_runs(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 3:
+        raise ValueError("runs must be an integer from 1 to 3")
+    return value
+
+
+def run_live_demo(*, runs: int = 1) -> dict[str, Any]:
     """Run the public zero-key calibration without writing a report to disk."""
 
     from .cli import _run_matrix
 
+    runs = _validated_demo_runs(runs)
     attempts, browser_version = _run_matrix(
         drivers=["reference", "popup-blind"],
         tasks=list(TASKS),
         variants=["clean", "popup-overlay"],
-        runs=1,
+        runs=runs,
         headed=False,
     )
     report = build_report(
         attempts,
         command="demo",
-        runs=1,
+        runs=runs,
         tasks=list(TASKS),
         variants=["clean", "popup-overlay"],
         browser_version=browser_version,
@@ -171,6 +178,13 @@ INDEX_HTML = """<!doctype html>
             <button class="liquid-button" id="run-demo" type="button">
               <span>Run local demo</span><b aria-hidden="true">↗</b>
             </button>
+            <label class="run-control" for="demo-runs"><span>Repetitions</span>
+              <select id="demo-runs" aria-describedby="run-status">
+                <option value="1" selected>1 · quick</option>
+                <option value="2">2 · compare</option>
+                <option value="3">3 · steadier</option>
+              </select>
+            </label>
             <a class="text-link" href="#evidence">Inspect preserved v1 evidence ↓</a>
           </div>
           <p class="run-status" id="run-status" role="status" aria-live="polite">
@@ -195,6 +209,10 @@ INDEX_HTML = """<!doctype html>
           <article><strong id="metric-attempts">—</strong><span>measured attempts</span></article>
           <article><strong id="metric-regressions">—</strong><span>controlled regressions</span></article>
         </div>
+        <aside class="use-guide" aria-label="How to read this calibration">
+          <strong>Run → compare → localize</strong>
+          <span>Choose repetitions, compare reference and popup-blind success, then inspect the first failed checkpoint. Repetitions change measurement confidence, not the controlled task set.</span>
+        </aside>
       </section>
 
       <section class="task-section" id="tasks" aria-labelledby="tasks-title">
@@ -224,6 +242,8 @@ STUDIO_CSS = r"""@font-face{font-family:"Instrument Sans";src:url("/assets/font.
 *{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--canvas)}body{margin:0;min-width:320px;background:radial-gradient(circle at 15% 3%,#fff 0,transparent 34%),radial-gradient(circle at 87% 12%,rgb(196 214 255 / 52%),transparent 32%),linear-gradient(145deg,#fbfdff 0%,#f1f7ff 49%,#e7f1ff 100%);color:var(--primary);font-family:"Instrument Sans",Arial,sans-serif;text-rendering:optimizeLegibility}.page-frame{width:min(100%,1480px);margin:auto;padding:clamp(18px,3vw,44px) clamp(18px,5vw,74px) 30px}.site-header{position:sticky;z-index:10;top:14px;display:flex;min-height:70px;align-items:center;gap:28px;padding:12px 18px 12px 22px;border-radius:26px}.liquid-surface{border:1px solid var(--edge);background:rgb(255 255 255 / 26%);box-shadow:inset 0 1px 0 var(--highlight),inset 0 -1px 0 rgb(79 70 229 / 6%),0 24px 72px rgb(71 105 148 / 11%);-webkit-backdrop-filter:blur(18px) saturate(148%);backdrop-filter:blur(18px) saturate(148%)}.brand-link{display:flex;width:160px;border-radius:12px}.brand-link img{display:block;width:100%;height:auto}.site-header nav{display:flex;gap:6px;margin-left:auto}.site-header nav a{padding:9px 12px;border:1px solid transparent;border-radius:999px;color:var(--muted);font-size:.74rem;font-weight:620;letter-spacing:.08em;text-decoration:none;text-transform:uppercase;transition:220ms}.site-header nav a:hover{border-color:rgb(255 255 255 / 82%);background:rgb(255 255 255 / 35%);color:var(--primary)}.local-badge{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:rgb(255 255 255 / 42%);color:#315a88;font-size:.74rem;font-weight:620}.local-badge i{width:7px;height:7px;border-radius:50%;background:#2563eb;box-shadow:0 0 12px rgb(37 99 235 / 35%)}.hero{display:grid;min-height:min(760px,calc(100vh - 104px));grid-template-columns:minmax(0,1.4fr) minmax(330px,.6fr);align-items:center;gap:clamp(50px,7vw,112px);padding:clamp(80px,11vh,140px) 0}.eyebrow{margin:0 0 24px;color:#315a88;font-size:.76rem;font-weight:650;letter-spacing:.13em;text-transform:uppercase}.hero .eyebrow{display:flex;align-items:center;gap:10px}.hero .eyebrow span{width:7px;height:7px;border-radius:50%;background:var(--blue)}h1,h2,p{font-variation-settings:"wdth" 100}.hero h1{margin:0;font-size:clamp(3.3rem,6.7vw,7rem);font-weight:570;letter-spacing:-.04em;line-height:.95}.hero h1 em{display:block;margin-top:.14em;background:linear-gradient(100deg,var(--blue),var(--indigo) 48%,var(--violet));background-clip:text;-webkit-background-clip:text;color:transparent;font-style:normal}.lede{max-width:700px;margin:36px 0 0;color:var(--reading);font-size:clamp(1.02rem,1.45vw,1.25rem);line-height:1.7}.hero-actions{display:flex;align-items:center;flex-wrap:wrap;gap:24px;margin-top:40px}.liquid-button{position:relative;display:inline-flex;min-height:58px;align-items:center;gap:14px;padding:0 25px 0 27px;overflow:hidden;border:1px solid var(--edge);border-radius:999px;outline:0;background-color:var(--glass);background-image:radial-gradient(circle at 24% -12%,rgb(255 255 255 / 76%),transparent 43%),linear-gradient(118deg,rgb(255 255 255 / 18%),transparent 58%,rgb(255 255 255 / 12%));box-shadow:inset 0 1px 0 var(--highlight),inset 0 -1px 0 rgb(79 70 229 / 8%),0 24px 72px rgb(71 105 148 / 14%);-webkit-backdrop-filter:blur(24px) saturate(148%);backdrop-filter:blur(24px) saturate(148%);color:var(--primary);font:620 .98rem/1 "Instrument Sans",sans-serif;cursor:pointer;transition:420ms var(--ease)}.liquid-button::before{content:"";position:absolute;inset:-2px auto -2px -45%;width:40%;background:linear-gradient(105deg,transparent 22%,rgb(255 255 255 / 58%) 49%,transparent 70%);transform:skewX(-16deg);transition:transform 620ms var(--ease)}.liquid-button:hover{border-color:rgb(255 255 255 / 84%);background-color:var(--glass-hover);transform:translateY(-3px);box-shadow:inset 0 1px 0 rgb(255 255 255 / 80%),0 30px 80px rgb(71 105 148 / 17%)}.liquid-button:hover::before{transform:translateX(380%) skewX(-16deg)}.liquid-button:active{transform:translateY(-1px) scale(.985)}.liquid-button:focus-visible,.text-link:focus-visible,a:focus-visible{outline:3px solid rgb(37 99 235 / 45%);outline-offset:4px}.liquid-button:disabled{cursor:wait;opacity:.62;transform:none}.text-link{color:var(--reading);font-weight:600;text-decoration:none}.run-status{min-height:1.5em;margin:18px 0 0;color:var(--muted);font-size:.82rem}.hero-proof{align-self:center;padding:30px;border:1px solid rgb(255 255 255 / 82%);border-radius:32px;background:rgb(255 255 255 / 48%);box-shadow:inset 0 1px 0 #fff,0 30px 90px rgb(71 105 148 / 12%)}.proof-top{display:flex;align-items:center;justify-content:space-between;color:#315a88;font-size:.72rem;font-weight:650;letter-spacing:.1em}.proof-top strong{padding:7px 10px;border-radius:999px;background:#edfdf5;color:#18744b;letter-spacing:0}.proof-orbit{position:relative;width:min(100%,270px);aspect-ratio:1;margin:24px auto}.proof-orbit::before,.proof-orbit::after,.proof-orbit i{position:absolute;border:1px solid rgb(79 70 229 / 16%);border-radius:50%;content:""}.proof-orbit::before{inset:7%}.proof-orbit::after{inset:22%}.proof-orbit i:nth-child(1){inset:37%}.proof-orbit i:nth-child(2){top:7%;left:48%;width:14px;height:14px;border:0;background:var(--blue);box-shadow:0 0 25px rgb(37 99 235 / 48%)}.proof-orbit i:nth-child(3){right:10%;bottom:21%;width:11px;height:11px;border:0;background:var(--violet)}.proof-orbit b{position:absolute;inset:43%;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--violet));box-shadow:0 10px 36px rgb(79 70 229 / 28%)}.hero-proof p{margin:0;color:var(--reading);font-size:.92rem;line-height:1.6}.evidence-section,.task-section{padding:clamp(70px,9vw,126px) 0}.section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:38px}.section-heading .eyebrow{margin-bottom:12px}.section-heading h2,.boundary h2{max-width:780px;margin:0;font-size:clamp(2.1rem,4.2vw,4.5rem);font-weight:560;letter-spacing:-.035em;line-height:1.02}.section-heading code{max-width:360px;padding:9px 12px;border-radius:10px;background:rgb(255 255 255 / 42%);color:var(--muted);font-size:.72rem;overflow-wrap:anywhere}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgb(71 105 148 / 18%);border-bottom:1px solid rgb(71 105 148 / 18%)}.metric-grid article{min-height:165px;padding:30px 26px;border-right:1px solid rgb(71 105 148 / 18%)}.metric-grid article:last-child{border:0}.metric-grid strong{display:block;font-size:clamp(2.5rem,4vw,4.3rem);font-weight:560;letter-spacing:-.04em}.metric-grid span{color:var(--muted);font-size:.88rem}.source-pill{padding:8px 11px;border-radius:999px;background:rgb(255 255 255 / 50%);color:#315a88;font-size:.76rem;font-weight:620}.task-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.task-card{position:relative;min-height:330px;padding:26px;border:1px solid rgb(255 255 255 / 78%);border-radius:24px;background:rgb(255 255 255 / 46%);box-shadow:inset 0 1px 0 #fff,0 16px 48px rgb(71 105 148 / 8%)}.task-index{color:#315a88;font-size:.72rem;font-weight:700;letter-spacing:.1em}.task-card h3{margin:66px 0 30px;font-size:clamp(1.45rem,2vw,2rem);font-weight:580;letter-spacing:-.025em}.rate-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rate-pair div{padding:13px;border-radius:14px;background:rgb(255 255 255 / 52%)}.rate-pair span,.failure span{display:block;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}.rate-pair strong{font-size:1.18rem}.failure{margin-top:18px;padding-top:18px;border-top:1px solid rgb(71 105 148 / 14%)}.failure code{display:block;margin-top:7px;color:var(--primary);font-size:.78rem;overflow-wrap:anywhere}.loading{color:var(--muted)}.boundary{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,8vw,130px);align-items:end;margin:50px 0 100px;padding:clamp(34px,5vw,66px);border-radius:32px;background:linear-gradient(135deg,rgb(37 99 235 / 9%),rgb(124 58 237 / 8%));box-shadow:inset 0 1px 0 rgb(255 255 255 / 75%)}.boundary p:last-child{margin:0;color:var(--reading);font-size:1rem;line-height:1.72}footer{display:flex;align-items:center;gap:14px;padding:24px 0;color:var(--muted);font-size:.78rem}footer img{width:34px;height:34px;border-radius:9px}
 @media(max-width:900px){.site-header nav{display:none}.hero{grid-template-columns:1fr;min-height:auto;padding-block:100px}.hero-proof{width:min(100%,520px)}.metric-grid{grid-template-columns:repeat(2,1fr)}.metric-grid article:nth-child(2){border-right:0}.metric-grid article:nth-child(-n+2){border-bottom:1px solid rgb(71 105 148 / 18%)}.task-grid{grid-template-columns:1fr}.boundary{grid-template-columns:1fr}.section-heading{align-items:flex-start;flex-direction:column}}
 @media(max-width:560px){.page-frame{padding-inline:14px}.site-header{top:8px;min-height:62px;border-radius:22px}.brand-link{width:132px}.local-badge{margin-left:auto;padding:8px 10px}.hero{padding-block:76px}.hero h1{font-size:clamp(2.9rem,14vw,4.3rem)}.hero-actions{align-items:flex-start;flex-direction:column}.metric-grid article{min-height:125px;padding:22px 16px}.section-heading code{max-width:100%}.boundary{padding:28px 22px}}
+body{line-height:1.62}.hero h1{overflow:visible;line-height:1.02}.hero h1 em{margin-top:.12em;padding-bottom:.06em}.hero-actions{gap:18px 24px}.run-control{display:grid;gap:5px;color:var(--muted);font-size:.72rem;font-weight:620}.run-control select{min-height:44px;padding:0 36px 0 14px;border:1px solid rgb(71 105 148 / 18%);border-radius:14px;background:rgb(255 255 255 / 68%);color:var(--primary);font:600 .86rem/1.55 "Instrument Sans",sans-serif}.run-control select:focus-visible{outline:3px solid rgb(37 99 235 / 45%);outline-offset:3px}.metric-grid{border:1px solid rgb(71 105 148 / 18%)}.metric-grid article:last-child{border-right:0}.use-guide{display:flex;align-items:baseline;gap:18px;margin-top:18px;padding:16px 18px;border-radius:14px;background:rgb(255 255 255 / 42%);color:var(--reading)}.use-guide strong{white-space:nowrap;font-size:.86rem}.use-guide span{font-size:.82rem;line-height:1.62}.evidence-section,.task-section,.boundary{scroll-margin-top:112px}
+@media(max-width:560px){.use-guide{align-items:flex-start;flex-direction:column;gap:7px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.liquid-button,.liquid-button::before,.site-header nav a{transition:none}}
 """
 
@@ -231,7 +251,7 @@ STUDIO_CSS = r"""@font-face{font-family:"Instrument Sans";src:url("/assets/font.
 STUDIO_JS = r"""const $=s=>document.querySelector(s);const pct=v=>`${Math.round(v*100)}%`;
 function render(data){$("#metric-tasks").textContent=data.taskCount;$("#metric-variants").textContent=data.variantCount;$("#metric-attempts").textContent=data.attemptCount;$("#metric-regressions").textContent=data.regressionCount;$("#protocol").textContent=data.protocol;$("#evidence-source").textContent=data.source==="demo"?"Fresh local demo":"Committed evidence";$("#task-grid").innerHTML=data.tasks.map((t,i)=>`<article class="task-card"><span class="task-index">0${i+1}</span><h3>${t.label}</h3><div class="rate-pair"><div><span>Reference</span><strong>${pct(t.baselineRate)}</strong></div><div><span>Popup-blind</span><strong>${pct(t.candidateRate)}</strong></div></div><div class="failure"><span>First failed checkpoint · ${pct(t.agreement)} agreement</span><code>${t.firstFailure}</code></div></article>`).join("");}
 async function load(){const response=await fetch("/api/evidence");if(!response.ok)throw new Error("Evidence unavailable");render(await response.json());}
-async function run(){const button=$("#run-demo"),status=$("#run-status");button.disabled=true;status.textContent="Running 12 local browser attempts…";try{const response=await fetch("/api/demo",{method:"POST"});const data=await response.json();if(!response.ok)throw new Error(data.error||"Demo failed");render(data);status.textContent=`PASS · ${data.regressionCount}/${data.taskCount} controlled regressions localized · Chromium ${data.browser}`;$("#proof-status").textContent="Fresh pass";$("#evidence").scrollIntoView({behavior:"smooth"});}catch(error){status.textContent=`Unable to run: ${error.message}`;}finally{button.disabled=false;}}
+async function run(){const button=$("#run-demo"),status=$("#run-status"),runs=Number($("#demo-runs").value);button.disabled=true;status.textContent=`Running ${12*runs} local browser attempts…`;try{const response=await fetch("/api/demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({runs})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Demo failed");render(data);status.textContent=`PASS · ${data.regressionCount}/${data.taskCount} controlled regressions localized · Chromium ${data.browser}`;$("#proof-status").textContent="Fresh pass";$("#evidence").scrollIntoView({behavior:"smooth"});}catch(error){status.textContent=`Unable to run: ${error.message}`;}finally{button.disabled=false;}}
 window.addEventListener("DOMContentLoaded",()=>{load().catch(error=>{$("#run-status").textContent=error.message;});$("#run-demo").addEventListener("click",run);});
 """
 
@@ -291,11 +311,23 @@ class _StudioHandler(BaseHTTPRequestHandler):
         if self.path != "/api/demo":
             self._json({"error": "not found"}, HTTPStatus.NOT_FOUND)
             return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 <= length <= 1_024:
+                raise ValueError("request body is too large")
+            raw = self.rfile.read(length) if length else b"{}"
+            payload = json.loads(raw)
+            if not isinstance(payload, dict):
+                raise ValueError("request body must be a JSON object")
+            runs = _validated_demo_runs(payload.get("runs", 1))
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+            self._json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
         if not self.server.run_lock.acquire(blocking=False):
             self._json({"error": "a local demo is already running"}, HTTPStatus.CONFLICT)
             return
         try:
-            self._json(run_live_demo())
+            self._json(run_live_demo(runs=runs))
         except Exception as exc:  # UI boundary: return a concise local error.
             self._json({"error": " ".join(str(exc).split())[:500]}, HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
