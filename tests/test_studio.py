@@ -8,6 +8,7 @@ import pytest
 from browser_agent_regression.studio import (
     INDEX_HTML,
     STUDIO_CSS,
+    STUDIO_JS,
     StudioAddress,
     StudioHTTPServer,
     _validated_demo_runs,
@@ -45,6 +46,9 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert "backdrop-filter:blur(24px) saturate(148%)" in STUDIO_CSS
     assert 'id="demo-runs"' in INDEX_HTML
     assert "Run → compare → localize" in INDEX_HTML
+    assert "position:fixed" in STUDIO_CSS
+    assert "syncNavigation" in STUDIO_JS
+    assert "aria-current','location'" in STUDIO_JS
 
 
 def test_demo_repetition_control_is_bounded() -> None:
