@@ -18,6 +18,8 @@ checkpoint-level independent scoring, repeated baseline/candidate comparison, fi
 localization, and verifiable JSON evidence. The default demo uses built-in deterministic drivers;
 model-backed adapters can apply the same evidence protocol to real-agent experiments.
 
+![Browser Agent Regression Studio showing a local run, evidence summary, and first-failure checkpoints](docs/assets/browser-agent-regression-demo.gif)
+
 ## Quick start
 
 Python 3.11–3.13 is supported.

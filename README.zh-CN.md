@@ -13,6 +13,8 @@ v1 核心包含三个可重置任务、四种语义不变 UI 变体、独立检�
 baseline/candidate 比较、首个失败点定位和可验证 JSON 证据。默认 demo 使用内置确定性
 driver；模型适配器可以把同一证据协议用于真实 Agent 实验。
 
+![Browser Agent Regression Studio 展示本地运行、证据摘要与首个失败检查点](docs/assets/browser-agent-regression-demo.gif)
+
 ## 快速开始
 
 支持 Python 3.11–3.13。

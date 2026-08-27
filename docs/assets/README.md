@@ -8,3 +8,6 @@ the connected-letter geometry, gradient, or signal centering in this repository.
 
 Instrument Sans is distributed under the SIL Open Font License 1.1; the complete notice is
 preserved in [InstrumentSans-OFL.txt](InstrumentSans-OFL.txt).
+
+`browser-agent-regression-demo.gif` records a verified local Studio flow: run the quick demo,
+inspect its evidence summary, and review the three first-failure checkpoints.
