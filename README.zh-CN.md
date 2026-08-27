@@ -9,8 +9,9 @@
 Browser Agent Regression 是一个本地优先的浏览器 Agent 回归工具，用来回答：**一次模型、
 提示词、工具或框架变更，究竟提高了可靠性，还是悄悄破坏了原本能通过的工作流？**
 
-v1 离线核心包含三个可重置任务、四种语义不变 UI 变体、独立检查点评分、重复的
-baseline/candidate 比较、首个失败点定位和可验证 JSON 证据。不需要 API Key 或托管服务。
+v1 核心包含三个可重置任务、四种语义不变 UI 变体、独立检查点评分、重复的
+baseline/candidate 比较、首个失败点定位和可验证 JSON 证据。默认 demo 使用内置确定性
+driver；模型适配器可以把同一证据协议用于真实 Agent 实验。
 
 ## 快速开始
 
@@ -27,12 +28,12 @@ browser-agent-regression demo
 browser-agent-regression studio
 ```
 
-`demo` 会运行 12 次本地尝试并写入 `runs/demo-report.json`。预期结果是 clean 行为保持一致，
+`demo` 会运行 12 次受控尝试并写入 `runs/demo-report.json`。预期结果是 clean 行为保持一致，
 并且人为设置的 popup-blind candidate 在三个任务上各产生一个能定位到首个检查点的回归。
-这是 runner 校准，不是真实 Agent benchmark。
+报告会记录合成 harness 校准使用的 driver、任务和协议。
 
-`studio` 会打开仅监听本机回环地址的可视化界面，遵循 AlvenX 官网产品设计语言。界面默认
-读取已提交证据，并可通过液态玻璃按钮运行同一套无 Key demo；它不会改写已提交报告。详见
+`studio` 会打开监听本机回环地址的可视化界面，遵循 AlvenX 官网产品设计语言。界面默认
+读取已提交证据，并可通过液态玻璃按钮在内存中运行同一套确定性校准，同时保持已提交报告不变。详见
 [Studio 使用说明](docs/studio.md)。
 
 验证新报告或仓库内 v1 证据：
@@ -68,7 +69,8 @@ popup overlay 下 candidate 的三个任务均从 100% 降至 0%，首个失败�
 
 ## 可选真实 Agent
 
-Browser Use + DeepSeek 适配器不属于离线核心，可能产生付费 API 请求：
+Browser Use + DeepSeek 适配器把相同任务和独立 DOM 评分用于模型驱动的运行，可能产生付费
+API 请求：
 
 ```powershell
 python -m pip install -e ".[agent]"
@@ -81,11 +83,11 @@ browser-agent-regression deepseek `
 运行前先阅读 [DeepSeek 安装与安全用 Key 指南](docs/deepseek.zh-CN.md)。凭据只从环境变量或
 隐藏输入读取，不会写入证据。
 
-## 边界
+## 项目状态
 
-v1 表示本地 runner、CLI、Python 包和证据合同已经可以稳定供外部使用，不表示需求已经得到
-验证。非作者独立运行仍是开放的采用问题；项目也不声称替代 WebArena、BrowserGym 或团队
-内部 eval。没有真实使用证据前，不建设托管看板、账户系统、通用 provider 框架或遥测。
+v1 表示 runner、CLI、Python 包和证据合同已经可以稳定供外部使用。当前工作聚焦安装体验、
+证据可读性，以及具名 Agent 与模型的适配。受控工作流适合重复回归定位；需要更广任务覆盖时，
+可与 WebArena、BrowserGym 或团队内部 eval 组合使用。
 
 ## 开发检查
 

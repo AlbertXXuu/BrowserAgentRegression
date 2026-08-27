@@ -71,9 +71,9 @@ def test_demo_runs_without_resolving_a_provider_key(tmp_path, monkeypatch, capsy
     assert report["regressions"][0]["task_id"] == "preferences.notifications.v1"
     assert "api_key" not in json.dumps(report).casefold()
     rendered = capsys.readouterr().out
-    assert "no API key" in rendered
+    assert "built-in drivers" in rendered
     assert "Demo result: PASS" in rendered
-    assert "not a model or browser-agent benchmark result" in rendered
+    assert "synthetic harness calibration" in rendered
 
     assert cli_module.main(["verify", "--report", str(output)]) == 0
 

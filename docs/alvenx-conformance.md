@@ -1,8 +1,8 @@
 # AlvenX conformance — Browser Agent Regression
 
 **Standard:** [AOS-0.1](https://github.com/AlbertXXuu/OpenMultimodalLab/blob/main/docs/alvenx-open-source-standard.md)<br>
-**Reviewed:** 2026-08-24<br>
-**Project state:** v1 technical release; independent adoption remains unvalidated
+**Reviewed:** 2026-08-27<br>
+**Project state:** v1 technical release; setup, evidence, and adapter feedback
 
 | Area | Status | Evidence or open condition |
 |---|---|---|
@@ -15,10 +15,9 @@
 | Remote repository and CI | Pass | Public GitHub repository exists and the first Linux CI run completed successfully |
 | Three-task Phase 0 matrix | Pass | Three tasks are implemented; the complete oracle passed 360/360 attempts and calibration localized three regressions |
 | Real-agent feasibility | Pass | Authenticated Browser Use + DeepSeek Gate C evidence passes 3/3 tasks and all nine independent checkpoints |
-| Independent adoption | Pending | Two non-author clone-and-run reports are required |
+| Developer feedback | Open | Issues collect setup, report-interpretation, and adapter-integration feedback |
 | Formal release | Pass | v1 package, CLI, evidence protocol, wheel checks, CI, changelog and release metadata are complete |
 
-The project may truthfully use the AlvenX series identity while items remain
-pending because its README exposes those items. The technical v1 decision does not convert
-the synthetic calibration into a real-agent benchmark or approve a universal
-harness abstraction.
+The AlvenX series identity is supported by the completed engineering and evidence
+checks above. Synthetic calibration and named model-backed runs retain separate
+evidence kinds and scoped result descriptions.

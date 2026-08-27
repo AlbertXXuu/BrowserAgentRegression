@@ -13,9 +13,10 @@
 Browser Agent Regression is a local-first harness for answering one practical question: **did a
 browser-agent change improve reliability, or did it quietly break a workflow that used to pass?**
 
-The v1 offline core provides three resettable browser tasks, four meaning-preserving UI variants,
+The v1 core provides three resettable browser tasks, four meaning-preserving UI variants,
 checkpoint-level independent scoring, repeated baseline/candidate comparison, first-failure
-localization, and verifiable JSON evidence. It needs no API key or hosted service.
+localization, and verifiable JSON evidence. The default demo uses built-in deterministic drivers;
+model-backed adapters can apply the same evidence protocol to real-agent experiments.
 
 ## Quick start
 
@@ -33,13 +34,13 @@ browser-agent-regression demo
 browser-agent-regression studio
 ```
 
-The demo runs 12 local attempts and writes `runs/demo-report.json`. The expected result is clean
+The demo runs 12 controlled attempts and writes `runs/demo-report.json`. The expected result is clean
 parity plus one deliberately induced popup regression for each task, localized to the first failed
-checkpoint. This is harness calibration, not an AI-agent benchmark result.
+checkpoint. The report records a synthetic harness-calibration result with its drivers and protocol.
 
-`studio` opens a loopback-only visual interface that follows the AlvenX product design language.
-It starts from the hash-checked committed evidence and can run the same zero-key demo from a liquid
-glass control without rewriting the committed report. See [Studio usage](docs/studio.md).
+`studio` opens a loopback visual interface that follows the AlvenX product design language. It starts
+from the hash-checked committed evidence and can run the same deterministic calibration in memory
+while leaving the committed report unchanged. See [Studio usage](docs/studio.md).
 
 Verify either a new report or the committed v1 evidence:
 
@@ -98,8 +99,8 @@ reliability; the independent DOM scorer remains authoritative.
 
 ## Optional real agent
 
-The Browser Use + DeepSeek adapter is intentionally outside the offline core and can make paid API
-requests:
+The Browser Use + DeepSeek adapter applies the same tasks and independent DOM scoring to a
+model-backed run. It can make paid API requests:
 
 ```bash
 python -m pip install -e ".[agent]"
@@ -112,13 +113,12 @@ browser-agent-regression deepseek \
 Read [the setup and safe-key guide](docs/deepseek.md) first. API credentials are read from the
 environment or hidden input and are never written into evidence.
 
-## Project boundary
+## Project status
 
-v1 means the local harness, CLI, package, and evidence contract are stable enough for external use.
-It does **not** mean demand is validated: independent developer runs are still an open adoption
-question, and the project does not claim to replace WebArena, BrowserGym, or internal agent evals.
-No hosted dashboard, account system, generic provider framework, or telemetry is planned without
-evidence that the local workflow is being used.
+v1 stabilizes the harness, CLI, package, and evidence contract for external use. Current work
+focuses on setup, evidence readability, and integrations for named agents and models. Use the
+controlled workflow for repeatable regression localization, and combine it with WebArena,
+BrowserGym, or team evals when broader task coverage is required.
 
 ## Development and release checks
 

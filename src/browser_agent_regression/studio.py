@@ -120,7 +120,7 @@ def _validated_demo_runs(value: object) -> int:
 
 
 def run_live_demo(*, runs: int = 1) -> dict[str, Any]:
-    """Run the public zero-key calibration without writing a report to disk."""
+    """Run the public deterministic calibration without writing a report to disk."""
 
     from .cli import _run_matrix
 
@@ -162,9 +162,9 @@ INDEX_HTML = """<!doctype html>
         <img src="/assets/wordmark.svg" alt="AlvenX">
       </a>
       <nav aria-label="Page sections">
-        <a href="#evidence">Evidence</a><a href="#tasks">Tasks</a><a href="#boundary">Boundary</a>
+        <a href="#evidence">Evidence</a><a href="#tasks">Tasks</a><a href="#boundary">Method</a>
       </nav>
-      <span class="local-badge"><i aria-hidden="true"></i>Local only</span>
+      <span class="local-badge"><i aria-hidden="true"></i>v1.0.0</span>
     </header>
 
     <main id="top">
@@ -188,7 +188,7 @@ INDEX_HTML = """<!doctype html>
             <a class="text-link" href="#evidence">Inspect preserved v1 evidence ↓</a>
           </div>
           <p class="run-status" id="run-status" role="status" aria-live="polite">
-            Zero API keys · 12 local browser attempts · no report files changed
+            Built-in drivers · 12 controlled browser attempts · in-memory result
           </p>
         </div>
         <aside class="hero-proof" aria-label="A baseline check advances until the first controlled browser drift">
@@ -224,10 +224,10 @@ INDEX_HTML = """<!doctype html>
       </section>
 
       <section class="boundary" id="boundary">
-        <div><p class="eyebrow">INTERPRETATION BOUNDARY</p><h2>Harness calibration,<br>not a model leaderboard.</h2></div>
-        <p>The popup-blind driver is deliberately limited so the harness can prove that clean parity,
-          regression magnitude, and first-failure localization all work end to end. It does not claim
-          that a named production agent has this failure rate.</p>
+        <div><p class="eyebrow">CALIBRATION METHOD</p><h2>Controlled changes,<br>inspectable evidence.</h2></div>
+        <p>The popup-blind driver creates a known regression so the harness can verify clean parity,
+          regression magnitude, and first-failure localization end to end. Model-backed adapters use
+          the same evidence contract for named agents and configurations.</p>
       </section>
     </main>
     <footer><img src="/assets/monogram.svg" alt=""><span>Browser Agent Regression · AlvenX open source</span></footer>

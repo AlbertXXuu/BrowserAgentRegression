@@ -1,0 +1,66 @@
+name: Workflow feedback
+description: Share setup, evidence, adapter-integration, or reproducible-regression feedback.
+title: "[Workflow feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Concrete workflow feedback helps improve setup, report readability, and named agent integrations. Keep credentials, usernames, private URLs, cookies, and absolute local paths out of the issue. Validate attached JSON with `browser-agent-regression verify` first.
+  - type: dropdown
+    id: feedback_area
+    attributes:
+      label: Feedback area
+      options:
+        - Setup or installation
+        - Calibration workflow
+        - Evidence or report interpretation
+        - Agent or model adapter integration
+        - Reproducible regression
+        - Workflow capability request
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Browser-agent context
+      description: Briefly describe what you build, evaluate, study, or maintain.
+      placeholder: Developer evaluating a model upgrade in a browser agent
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, and CPU architecture; omit usernames and paths.
+      placeholder: Windows 11, Python 3.12, x86-64
+  - type: input
+    id: revision
+    attributes:
+      label: Tested version or revision
+      placeholder: v1.0.0 or a short Git commit
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands or integration steps
+      render: shell
+  - type: textarea
+    id: result
+    attributes:
+      label: Observed result
+      description: Describe the result and attach redacted, verified evidence when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: expected_value
+    attributes:
+      label: Expected workflow or decision
+      description: Explain what you expected the tool to help you observe or decide.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, usernames, private URLs, cookies, and absolute local paths.
+          required: true

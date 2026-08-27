@@ -1,10 +1,9 @@
 # Contributing
 
-Browser Agent Regression has a stable v1 local protocol. The most valuable contributions are
-reproducible runs and concrete feedback from developers who maintain browser agents.
-Use the
-[independent-run form](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=independent-run.yml)
-for a clean-environment result or blocker.
+Browser Agent Regression has a stable v1 protocol. Useful contributions include reproducible
+regressions and concrete feedback from developers who maintain browser agents. Use the
+[workflow-feedback form](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=workflow-feedback.yml)
+for setup, evidence, and adapter-integration feedback.
 
 ## Before opening a change
 
@@ -23,9 +22,8 @@ python scripts/check_repository.py
 python -m build
 ```
 
-The optional real-agent path is installed separately with
-`python -m pip install -e ".[dev,agent]"`. Never use a paid provider run as a substitute for the
-offline checks above.
+Install the optional real-agent path with `python -m pip install -e ".[dev,agent]"`. Run the
+built-in calibration checks before comparing a paid provider configuration.
 
 When reporting a run, include the operating system, Python version, exact command, and generated
 JSON report. Remove credentials and private URLs before attaching evidence.

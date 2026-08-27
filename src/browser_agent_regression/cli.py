@@ -155,7 +155,7 @@ def _calibration_status(
 def _demo(args: argparse.Namespace) -> int:
     tasks = _tasks(args.task)
     variants: list[Variant] = ["clean", "popup-overlay"]
-    print("Running local synthetic demo: no API key, model account, or paid API call.")
+    print("Running the local controlled-regression demo with built-in drivers.")
     attempts, browser_version = _run_matrix(
         drivers=["reference", "popup-blind"],
         tasks=tasks,
@@ -191,10 +191,7 @@ def _demo(args: argparse.Namespace) -> int:
         f"{len(regressions_by_task)}/{len(tasks)} "
         "controlled regressions detected."
     )
-    print(
-        "Scope: synthetic harness calibration only; this is not a model or browser-agent "
-        "benchmark result."
-    )
+    print("Scope: synthetic harness calibration with controlled drivers and fixtures.")
     return 0 if passed else 1
 
 
@@ -395,9 +392,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    demo = subparsers.add_parser(
-        "demo", help="Run the zero-key local regression demonstration."
-    )
+    demo = subparsers.add_parser("demo", help="Run the local regression demonstration.")
     demo.add_argument("--runs", type=int, default=1)
     demo.add_argument("--task", action="append", choices=TASKS)
     demo.add_argument("--output", type=Path, default=Path("runs/demo-report.json"))

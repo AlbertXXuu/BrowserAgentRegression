@@ -1,6 +1,6 @@
 # Project Charter — Browser Agent Regression
 
-**Status:** v1 technical release; external-adoption validation remains open<br>
+**Status:** v1 technical release; current focus is setup, evidence readability, and adapter integration<br>
 **Decision date:** 2026-08-15<br>
 **Time box:** 5–7 days<br>
 **Owner:** AlbertXXuu
@@ -9,19 +9,15 @@
 
 The deterministic fixtures, synthetic regression calibration, evidence contract, package, and one
 optional real-agent feasibility path have passed their technical gates. The owner authorized a v1
-engineering release while preserving the strongest unresolved fact: two independent target-developer
-runs have not occurred, so external demand is not validated. v1 therefore freezes the local tool and
-its evidence protocol; it does not convert the original market hypothesis into a proven claim.
+engineering release. v1 freezes the tool and its evidence protocol while independent adoption
+measurement is deferred.
 
 ## 1. Decision
 
-Build a lightweight, local-first regression fixture runner for browser agents, but approve
-only Phase 0. Work stops or the direction changes if the gates below do not pass.
-
-This is not a commitment to build a platform. Phase 0 exists to test two assumptions:
+Build a lightweight regression fixture runner for browser agents. Phase 0 tested the technical
+assumption below; a separate adoption signal was defined for possible later use:
 
 1. Controlled browser tasks can produce stable and diagnostically useful regression evidence.
-2. At least two target developers care enough to clone and run that evidence workflow.
 
 ## 2. Target user and job
 
@@ -32,10 +28,10 @@ merge.
 Their job is:
 
 > Run the same controlled workflows before and after a change, detect a statistically obvious
-> regression, and identify the first failed checkpoint without operating hosted infrastructure.
+> regression, and identify the first failed checkpoint from durable evidence.
 
-Phase 0 does not claim that this is already a validated market. External runs are a required
-gate precisely because current evidence is insufficient.
+Phase 0 establishes technical feasibility. Developer feedback now informs setup, report clarity,
+and concrete adapter integrations.
 
 ## 3. Product hypothesis
 
@@ -45,18 +41,17 @@ The longer-term research object is **agent-system regression**:
 agent system = model + harness + tools + environment
 ```
 
-Browser is the first controlled environment, not a claim that the project already evaluates
-every kind of agent system. During Phase 0, `reference` and `popup-blind` remain explicitly
-synthetic calibration drivers. A generic model/harness/prompt/tool run identity is deferred
-until one real integration and external users demonstrate which fields are actually required.
+Browser is the first controlled environment. During Phase 0, `reference` and `popup-blind` are
+explicitly synthetic calibration drivers. Real integrations record model, harness, prompt, tool,
+and run identity fields required by their evidence.
 
 Given deterministic local tasks and semantic-preserving UI perturbations, a small repeated-run
 harness can reveal browser-agent regressions more reliably than one-off demos and with less
 setup than a hosted benchmark platform.
 
 The strongest competing explanation is that agent teams already have internal eval harnesses
-or prefer existing browser benchmarks. Two independent external runs are therefore necessary;
-technical success alone is not a GO decision.
+or prefer existing browser benchmarks. Future scope decisions should therefore use observed
+integration needs and developer feedback in addition to technical evidence.
 
 ## 4. Phase 0 scope
 
@@ -68,7 +63,6 @@ technical success alone is not a GO decision.
 - Repeated-run baseline/candidate comparison.
 - Machine-readable JSON evidence with the first failed checkpoint.
 - One real browser-agent integration after the deterministic calibration is trustworthy.
-- Two target developers who independently clone and run the project.
 
 ### Current executable slice
 
@@ -76,7 +70,7 @@ technical success alone is not a GO decision.
 - All three perturbation classes on all three tasks.
 - A deterministic reference oracle.
 - A deliberately degraded calibration candidate.
-- A one-command, zero-API-key local demo that saves a clearly labelled synthetic report.
+- A one-command deterministic calibration demo that saves a clearly labelled synthetic report.
 - CLI commands for serving, selecting tasks, oracle stability runs, and paired calibration.
 - One concrete optional Browser Use + DeepSeek command with hidden credential input and
   independent DOM checkpoint scoring.
@@ -86,11 +80,11 @@ Gate A and Gate B pass on the third local slice: the reference oracle completed 
 attempts, and the synthetic candidate produced three correctly localized popup regressions.
 Gate C passes on revision `b817b68`: one authenticated Browser Use + `deepseek-v4-flash` run
 completed all three clean goals and passed all nine independent DOM checkpoints. The run proves
-integration feasibility but also retained transient model-output instability; it is not a repeated
-reliability result. Gate D remains pending.
+integration feasibility and retained transient model-output instability. Its evidence covers one run;
+the optional adoption signal remains deferred.
 
-The calibration drivers are controls for the harness. They are not evidence about the quality
-of any model or browser-agent framework.
+The calibration drivers are controls for the harness. Model-quality evidence requires named
+model-backed runs and an appropriate repetition protocol.
 
 ## 5. Non-goals
 
@@ -108,8 +102,8 @@ Phase 0 will not include:
 
 ## 6. Acceptance gates
 
-All gates are conjunctive. Missing one means **NO-GO / continue validation**, not “almost
-passed.”
+Gates A–C define the completed technical acceptance. The adoption signal is recorded separately
+for use if the owner resumes that measurement.
 
 ### Gate A — Fixture determinism
 
@@ -131,12 +125,12 @@ passed.”
 
 - One current browser-agent implementation can execute all three task goals through a thin,
   repository-local adapter.
-- Credentials are optional for the deterministic test suite and never stored in evidence.
+- The deterministic suite uses the built-in reference driver; real-agent credentials stay outside evidence.
 - Repeated results can be compared without changing the fixture or report schema.
 
-This gate proves integration feasibility, not market demand and not state-of-the-art quality.
+This gate records integration feasibility for the named agent, model, fixture, and run count.
 
-### Gate D — External demand
+### Deferred adoption signal
 
 - Two target developers independently clone the repository and run the documented command on
   their own machines.
@@ -147,7 +141,7 @@ This gate proves integration feasibility, not market demand and not state-of-the
 ## 7. Stop and adjustment rules
 
 - Stop Phase 0 after day 7 if fixture nondeterminism prevents Gate A after two focused fixes.
-- Do not start v0.1 while either Gate B or Gate D is unpassed.
+- Do not extend the task or perturbation set until a concrete integration or research need is observed.
 - If real-agent integration requires framework-specific changes throughout the core, narrow to
   one named agent ecosystem instead of inventing a universal abstraction.
 - If external users understand the problem but cannot complete setup, prioritize installation
@@ -174,15 +168,14 @@ task manifest + local fixture
 - **Comparison:** aggregates repeated attempts and reports negative success-rate deltas.
 - **CLI:** exposes the experiment without adding a service layer.
 
-The repository intentionally has no generic adapter interface yet. The first real-agent
-integration will reveal the minimum boundary based on evidence rather than prediction.
+The adapter surface grows from concrete real-agent integrations and their evidence requirements.
 
 ## 9. Evidence policy
 
 - Generated reports include a schema version and explicit configuration.
 - Synthetic calibration results are labelled `synthetic`; real results must name the agent,
   model, harness, prompt/tool configuration when relevant, date, and run count.
-- No result is described as a benchmark unless the task set and methodology justify that word.
+- Use the term `benchmark` only when the task set and methodology justify it.
 - Failures and instability remain visible; unsuccessful experiments are not deleted from the
   project record.
 

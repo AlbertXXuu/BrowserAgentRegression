@@ -4,7 +4,8 @@
 
 这是可选的真实 Agent 路径：Browser Use 操作同一组本地 fixture，结束后由独立 DOM
 检查点评分。任务和 Browser Use 提取的页面表示会发送到按量计费的 DeepSeek API。
-确定性的 `oracle` 与 `calibrate` 仍完全离线，不需要 API Key。
+默认校准路径使用内置 reference 与 popup-blind driver；这个适配器把具名模型运行加入同一
+证据协议。
 
 ## 1. 准备条件
 
@@ -27,8 +28,7 @@ python -m pip install -e ".[dev,agent]"
 python -m playwright install chromium
 ```
 
-`[agent]` 被刻意隔离为可选依赖。只运行确定性校准的用户不必安装 Browser Use 或模型
-Provider SDK。
+`[agent]` 会为模型驱动的运行安装 Browser Use 与 Provider 依赖。
 
 ## 3. 先做一次 Agent smoke test
 
@@ -112,4 +112,4 @@ Remove-Item Env:DEEPSEEK_API_KEY
 新生成的真实 Agent 报告使用 evidence schema `1.0`，并标记
 `evidence_kind: "real-agent"`；保留的 Phase 0 历史报告仍为 schema `0.2`。报告记录 Browser Use 版本、模型、无视觉配置、运行次数、
 浏览器显示模式、fixture 哈希、耗时、检查点和受限长度的错误，但不会记录 API Key。这些
-受控本地结果只证明集成可行性，不是 DeepSeek 或 Browser Use 的通用 benchmark。
+受控结果记录具名 DeepSeek 模型、Browser Use 版本、fixture 集合和运行次数下的集成可行性。

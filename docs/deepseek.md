@@ -4,8 +4,8 @@
 
 This optional path runs a real Browser Use agent against the same local fixtures and scores the
 result with independent DOM checkpoints. It sends the task and Browser Use page representation to
-the paid DeepSeek API. The deterministic `oracle` and `calibrate` commands remain offline and do
-not need an API key.
+the paid DeepSeek API. The default calibration path uses the built-in reference and popup-blind
+drivers; this adapter adds a named model-backed run to the same evidence protocol.
 
 ## 1. Prerequisites
 
@@ -28,8 +28,7 @@ python -m pip install -e ".[dev,agent]"
 python -m playwright install chromium
 ```
 
-The `[agent]` extra is intentionally separate. Users running only deterministic calibration do
-not install Browser Use or provider SDKs.
+The `[agent]` extra installs Browser Use and its provider dependencies for model-backed runs.
 
 ## 3. Start with one agent smoke attempt
 
@@ -118,5 +117,5 @@ New real-agent reports use evidence schema `1.0` and `evidence_kind: "real-agent
 reports remain schema `0.2`. Reports record
 the Browser Use version, model, non-vision setting, browser display mode, run count, fixture hashes,
 duration, checkpoint results, and bounded errors. They never record the API key. These controlled
-local results prove integration feasibility; they are not a general DeepSeek or Browser Use
-benchmark.
+results record integration feasibility for the named DeepSeek model, Browser Use version, fixture
+set, and run count.
