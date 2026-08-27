@@ -18,6 +18,9 @@ driver；模型适配器可以把同一证据协议用于真实 Agent 实验。
 支持 Python 3.11–3.13。
 
 ```powershell
+git clone --branch v1.0.0 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
+cd BrowserAgentRegression
+
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"

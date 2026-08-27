@@ -23,6 +23,9 @@ model-backed adapters can apply the same evidence protocol to real-agent experim
 Python 3.11–3.13 is supported.
 
 ```bash
+git clone --branch v1.0.0 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
+cd BrowserAgentRegression
+
 python -m venv .venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux: source .venv/bin/activate
