@@ -101,6 +101,8 @@ The committed v1 calibration repeats each baseline/candidate/task/variant cell t
 reference and candidate match on clean pages; the candidate falls from 100% to 0% under the popup
 overlay for all three tasks, with 100% agreement on each first failed checkpoint. The companion v1
 oracle report covers all four variants. Both reports pass the same public `verify` command used in CI.
+Use the [failure taxonomy](docs/research/failure-taxonomy.md) to separate that first unmet outcome
+checkpoint from a causal claim about observation, action, recovery, safety or the harness.
 
 Earlier Phase 0 evidence is retained as historical provenance, including a one-run Browser Use +
 DeepSeek feasibility check. That paid adapter showed integration feasibility but not repeated model
