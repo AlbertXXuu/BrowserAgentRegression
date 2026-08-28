@@ -76,6 +76,8 @@ popup overlay 下 candidate 的三个任务均从 100% 降至 0%，首个失败�
 配套 oracle 报告覆盖全部四种变体，两份报告都由 CI 调用公开 `verify` 命令验收。
 使用[失败分类](docs/research/failure-taxonomy.md)区分“第一个未满足的结果检查点”与对观察、
 动作、恢复、安全或 harness 内部原因的推断。
+[研究版图](docs/research/landscape.md)用一手来源比较冻结 v1 与相邻 benchmark、diff 工具、
+Agent 评估、失败诊断及 WebMCP testing 的能力边界。
 
 ## 可选真实 Agent
 
