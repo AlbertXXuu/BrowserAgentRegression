@@ -10,6 +10,10 @@
 
 [简体中文](README.zh-CN.md) · [Evidence schema](docs/evidence-schema.md) · [v1 evidence](docs/evidence/v1.0.0-calibration.json)
 
+> Maintenance status: `v1.0.0` is the frozen public release. Current work focuses on
+> maintenance, reproduction, external validation, and clearly separated follow-up research.
+> See the [maintenance policy](docs/MAINTENANCE.md) and [portfolio evidence](PORTFOLIO.md).
+
 Browser Agent Regression is a local-first harness for answering one practical question: **did a
 browser-agent change improve reliability, or did it quietly break a workflow that used to pass?**
 
