@@ -103,6 +103,8 @@ overlay for all three tasks, with 100% agreement on each first failed checkpoint
 oracle report covers all four variants. Both reports pass the same public `verify` command used in CI.
 Use the [failure taxonomy](docs/research/failure-taxonomy.md) to separate that first unmet outcome
 checkpoint from a causal claim about observation, action, recovery, safety or the harness.
+The [research landscape](docs/research/landscape.md) compares the frozen v1 boundary with primary
+sources for adjacent benchmarks, diff tools, agent evaluation, diagnosis and WebMCP testing.
 
 Earlier Phase 0 evidence is retained as historical provenance, including a one-run Browser Use +
 DeepSeek feasibility check. That paid adapter showed integration feasibility but not repeated model
