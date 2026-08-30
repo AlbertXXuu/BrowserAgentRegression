@@ -1,8 +1,9 @@
 # BrowserAgentRegression v1.1.0 final release audit
 
-- Status: **CANDIDATE — Linux CI required before PASS**
+- Status: **PASS**
 - Audit date: `2026-08-30` (`Asia/Shanghai`)
 - Audited source commit: `80059998d22f2bedd92174366d0e39779a3b332a`
+- First complete Linux-CI candidate commit: `27f825ac2304f0cd8cb86b77dd1d627d1fccd5f5`
 - Target release: `v1.1.0`
 
 ## Release meaning
@@ -19,8 +20,9 @@ explicitly selected. Windows validation used Windows NT `10.0.26200.0`, PowerShe
 `3.11.0`, Playwright `1.62.0`, and Chromium `151.0.7922.34`. Built distributions were installed in
 two new isolated environments, one from the wheel and one from the source distribution.
 
-Linux is not inferred from the Windows result. This audit remains a candidate until the complete
-pull-request head passes the repository's GitHub Actions matrix on Ubuntu.
+Linux is not inferred from the Windows result. The complete candidate passed the repository's
+GitHub Actions matrix on Ubuntu. This record remains valid only while every check on the current
+head of pull request [#10](https://github.com/AlbertXXuu/BrowserAgentRegression/pull/10) is green.
 
 ## Readiness checklist
 
@@ -33,7 +35,7 @@ pull-request head passes the repository's GitHub Actions matrix on Ubuntu.
 | Windows/local tests | PASS | `29` pytest tests passed, including the browser-marked path. Ruff passed. |
 | Repository checker | PASS | Version `1.1.0`, `82` tracked files, and `5` committed evidence records validated, including this audit record. |
 | Deterministic core action | PASS | Installed wheel completed `12` controlled attempts and detected/localized `3/3` induced regressions; frozen calibration verification passed `36` attempts. |
-| Linux CI | PENDING | Required on the complete `closure/v1.1.0` pull-request head before this audit may become PASS. |
+| Linux CI | PASS | [Run 33314875299](https://github.com/AlbertXXuu/BrowserAgentRegression/actions/runs/33314875299) passed unit jobs on Python 3.11/3.12/3.13 plus full browser integration, sdist/wheel, and installed-wheel smoke on the complete candidate. |
 | README / README.zh-CN | PASS | Both are present, coherent with the `1.1.0` candidate identity, and preserve the frozen protocol/reproduction boundary. |
 | CHANGELOG / MAINTENANCE | PASS | `CHANGELOG.md` and `docs/MAINTENANCE.md` are present and define the bounded closure release plus maintenance-only follow-up. |
 | PORTFOLIO | PASS | Problem, original decisions, hardest bugs, results, evidence limits, negative findings, and individual contribution are recorded. |
@@ -72,8 +74,8 @@ protocol artifact, or frozen evidence object changed.
 
 ## Findings and disposition
 
-- **P0 blockers:** `0` locally; final count is contingent on Linux CI.
-- **P1 blockers:** `0` locally; final count is contingent on Linux CI.
+- **P0 blockers:** `0`.
+- **P1 blockers:** `0`.
 - **P2 accepted:** the old concept-hero selectors remain as unreachable declarations inside the
   existing minified CSS literal, but the corresponding DOM and animation are absent. Removing
   isolated tokens from that large generated-like literal immediately before release carries more
@@ -83,6 +85,6 @@ protocol artifact, or frozen evidence object changed.
 
 ## Gate decision
 
-Local release readiness is **PASS**. Overall P10 readiness remains **PENDING** until the exact
-pull-request head passes every Linux CI job. No tag or release may be created from this candidate
-before that evidence exists.
+Release readiness is **PASS** with P0/P1 counts of zero. The audit-status reconciliation changes
+only this document and must pass the same pull-request checks before merge. No tag or release may
+be created until P11 validates the merged commit and reconfirms its current-head CI.
