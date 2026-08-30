@@ -2,7 +2,7 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
-## [1.1.0] - Unreleased
+## [1.1.0] - 2026-08-30
 
 ### Added
 
@@ -14,7 +14,7 @@ All notable changes are documented here. Releases use semantic versioning.
 ### Changed
 
 - Normalize current software, runtime, Studio, and documentation identity as the `v1.1.0`
-  presentation and maintenance closure candidate while preserving the unchanged `v1.0.0`
+  presentation and maintenance closure release while preserving the unchanged `v1.0.0`
   research/evidence baseline.
 
 ## [1.0.0] - 2026-08-24

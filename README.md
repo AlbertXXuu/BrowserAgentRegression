@@ -10,8 +10,8 @@
 
 [简体中文](README.zh-CN.md) · [Evidence schema](docs/evidence-schema.md) · [v1 evidence](docs/evidence/v1.0.0-calibration.json)
 
-> Version status: current software is the `v1.1.0` closure candidate. The research protocol and
-> evidence baseline remain the immutable `v1.0.0` public release; the candidate adds presentation
+> Version status: current software is the `v1.1.0` closure release. The research protocol and
+> evidence baseline remain the immutable `v1.0.0` public release; this release adds presentation
 > and maintenance work, not a new regression claim. See the
 > [maintenance policy](docs/MAINTENANCE.md) and [portfolio evidence](PORTFOLIO.md).
 
