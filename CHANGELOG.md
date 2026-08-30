@@ -2,7 +2,7 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
-## [Unreleased]
+## [1.1.0] - Unreleased
 
 ### Added
 
@@ -10,6 +10,12 @@ All notable changes are documented here. Releases use semantic versioning.
   preserved v1 evidence visualization, and an in-memory zero-key demo control.
 - Bundled integrity-checked AlvenX masters, Instrument Sans, and a compact evidence fallback so the
   Studio remains functional from an installed wheel.
+
+### Changed
+
+- Normalize current software, runtime, Studio, and documentation identity as the `v1.1.0`
+  presentation and maintenance closure candidate while preserving the unchanged `v1.0.0`
+  research/evidence baseline.
 
 ## [1.0.0] - 2026-08-24
 
@@ -34,4 +40,4 @@ All notable changes are documented here. Releases use semantic versioning.
 - Phase 0 schema `0.1` files remain historical artifacts but are outside the v1 compatibility promise.
 
 [1.0.0]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.0.0
-[Unreleased]: https://github.com/AlbertXXuu/BrowserAgentRegression/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/AlbertXXuu/BrowserAgentRegression/compare/v1.0.0...HEAD

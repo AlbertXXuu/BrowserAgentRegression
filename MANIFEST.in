@@ -8,6 +8,7 @@ include README.md
 include README.zh-CN.md
 include SECURITY.md
 recursive-include docs *.json *.md *.svg *.txt
+recursive-include docs/assets/studio *.png
 recursive-include scripts *.py
 recursive-include tests *.py
 global-exclude *.py[cod]

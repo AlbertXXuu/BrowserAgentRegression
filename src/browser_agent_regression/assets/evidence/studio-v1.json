@@ -15,7 +15,24 @@
       "baselineRate": 1.0,
       "candidateRate": 0.0,
       "firstFailure": "checkout.email.accepted",
-      "agreement": 1.0
+      "agreement": 1.0,
+      "checkpoints": [
+        {
+          "id": "checkout.email.accepted",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        },
+        {
+          "id": "checkout.shipping.selected",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        },
+        {
+          "id": "checkout.confirmed",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        }
+      ]
     },
     {
       "id": "catalog.find-and-save.v1",
@@ -24,7 +41,24 @@
       "baselineRate": 1.0,
       "candidateRate": 0.0,
       "firstFailure": "catalog.query.applied",
-      "agreement": 1.0
+      "agreement": 1.0,
+      "checkpoints": [
+        {
+          "id": "catalog.query.applied",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        },
+        {
+          "id": "catalog.product.opened",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        },
+        {
+          "id": "catalog.product.saved",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        }
+      ]
     },
     {
       "id": "preferences.notifications.v1",
@@ -33,7 +67,24 @@
       "baselineRate": 1.0,
       "candidateRate": 0.0,
       "firstFailure": "preferences.product_updates.disabled",
-      "agreement": 1.0
+      "agreement": 1.0,
+      "checkpoints": [
+        {
+          "id": "preferences.product_updates.disabled",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        },
+        {
+          "id": "preferences.security_alerts.enabled",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        },
+        {
+          "id": "preferences.saved",
+          "referenceRate": 1.0,
+          "candidateRate": 0.0
+        }
+      ]
     }
   ]
 }

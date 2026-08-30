@@ -6,8 +6,9 @@
 
 [English](README.md) · [证据协议](docs/evidence-schema.md) · [v1 证据](docs/evidence/v1.0.0-calibration.json)
 
-> 维护状态：`v1.0.0` 是冻结的公开正式版。当前工作聚焦维护、复现、外部验证和明确分离的
-> 后续研究。详见[维护政策](docs/MAINTENANCE.md)与[作品证据页](PORTFOLIO.md)。
+> 版本状态：当前软件是 `v1.1.0` 收尾候选版；研究协议与证据基线仍是不可变的
+> `v1.0.0` 公开正式版。候选版只收束展示与维护，不产生新的回归结论。详见
+> [维护政策](docs/MAINTENANCE.md)与[作品证据页](PORTFOLIO.md)。
 
 Browser Agent Regression 是一个本地优先的浏览器 Agent 回归工具，用来回答：**一次模型、
 提示词、工具或框架变更，究竟提高了可靠性，还是悄悄破坏了原本能通过的工作流？**

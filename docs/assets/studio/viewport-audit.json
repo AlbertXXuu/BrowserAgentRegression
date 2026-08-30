@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0",
+  "checked_on": "2026-08-30",
+  "software_version": "1.1.0-candidate",
+  "evidence_version": "1.0.0",
+  "protocol": "browser-agent-regression-controlled-ui-v1",
+  "browser": "Playwright Chromium 151.0.7922.34",
+  "page": "http://127.0.0.1:7870/",
+  "viewport_height_px": 1000,
+  "shared_header_contract": {
+    "position": "fixed",
+    "z_index": 100,
+    "top_px": 14,
+    "minimum_height_px": 70,
+    "gap_px": 28,
+    "padding": "12px 18px 12px 22px",
+    "border_radius_px": 26,
+    "background": "rgb(255 255 255 / 26%)",
+    "backdrop_filter": "blur(18px) saturate(148%)",
+    "wordmark_width_px": 160
+  },
+  "checkpoint_visual": {
+    "task": "checkout.basic.v1",
+    "reference_rates": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "candidate_rates": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "first_divergence": "checkout.email.accepted",
+    "failure_checkpoint_agreement": 1.0,
+    "source": "docs/evidence/v1.0.0-calibration.json"
+  },
+  "viewports": [
+    {
+      "width_px": 900,
+      "scroll_width_px": 900,
+      "horizontal_overflow": false,
+      "hero_columns": 1,
+      "minimum_critical_target_height_px": 44,
+      "screenshot": "bar-studio-900px.png",
+      "screenshot_height_px": 3892,
+      "screenshot_sha256": "2c2e8add022da222e755722b5482edf72b63442950ae584b9079eeedb85713fd"
+    },
+    {
+      "width_px": 1024,
+      "scroll_width_px": 1024,
+      "horizontal_overflow": false,
+      "hero_columns": 1,
+      "minimum_critical_target_height_px": 44,
+      "screenshot": "bar-studio-1024px.png",
+      "screenshot_height_px": 3954,
+      "screenshot_sha256": "23888380736a00ead8a1ba6ee861e5154f2274be606963789bdee471b19c9589"
+    },
+    {
+      "width_px": 1280,
+      "scroll_width_px": 1280,
+      "horizontal_overflow": false,
+      "hero_columns": 2,
+      "minimum_critical_target_height_px": 44,
+      "screenshot": "bar-studio-1280px.png",
+      "screenshot_height_px": 2916,
+      "screenshot_sha256": "b490d7d609fe7fb4972f92aa1cb7afb332f5f68ee03f7d67550ec10193826a6d"
+    },
+    {
+      "width_px": 1440,
+      "scroll_width_px": 1440,
+      "horizontal_overflow": false,
+      "hero_columns": 2,
+      "minimum_critical_target_height_px": 44,
+      "screenshot": "bar-studio-1440px.png",
+      "screenshot_height_px": 3114,
+      "screenshot_sha256": "074c172275630c403259e9f99aca7ae1abbf412a7c7c1b90a22f77d3d872abad"
+    },
+    {
+      "width_px": 1600,
+      "scroll_width_px": 1600,
+      "horizontal_overflow": false,
+      "hero_columns": 2,
+      "minimum_critical_target_height_px": 44,
+      "screenshot": "bar-studio-1600px.png",
+      "screenshot_height_px": 3220,
+      "screenshot_sha256": "0ad59b162e7789a0dbc5a8dc69086df1049c7c647d406c23aec892a40c5b8e54"
+    }
+  ],
+  "keyboard": {
+    "header_links_height_px": 44,
+    "run_button_height_px": 58,
+    "run_button_focus_outline": "3px solid rgb(37 99 235 / 45%)",
+    "select_height_px": 44,
+    "evidence_link_activated_with_enter": true
+  },
+  "live_demo": {
+    "runs": 1,
+    "attempts": 12,
+    "result": "PASS",
+    "localized_regressions": 3,
+    "task_count": 3,
+    "source_after_run": "Fresh local demo",
+    "writes_report_to_disk": false
+  }
+}

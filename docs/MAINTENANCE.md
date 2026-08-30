@@ -1,7 +1,8 @@
 # Maintenance policy
 
 Current public release: `v1.0.0`
-Development mode: maintenance, reproduction, external validation, and separated follow-up research
+Current software: `v1.1.0` closure candidate
+Development mode: bounded presentation and maintenance closure; no new research claim
 
 ## Frozen release surface
 
