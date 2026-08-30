@@ -39,7 +39,7 @@ def test_version_is_exposed(capsys) -> None:
         build_parser().parse_args(["--version"])
 
     assert exc_info.value.code == 0
-    assert "1.1.0" in capsys.readouterr().out
+    assert "1.1.1" in capsys.readouterr().out
 
 
 @pytest.mark.browser
@@ -82,7 +82,7 @@ def test_demo_runs_without_resolving_a_provider_key(tmp_path, monkeypatch, capsy
 def test_doctor_confirms_browser_and_fixtures(capsys) -> None:
     assert cli_module.main(["doctor"]) == 0
     rendered = capsys.readouterr().out
-    assert "browser-agent-regression=1.1.0" in rendered
+    assert "browser-agent-regression=1.1.1" in rendered
     assert "chromium=ready" in rendered
 
 
