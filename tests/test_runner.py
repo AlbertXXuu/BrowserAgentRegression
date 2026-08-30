@@ -104,7 +104,7 @@ def test_calibration_detects_popup_regression_only() -> None:
 
     assert report["schema_version"] == "1.0"
     assert report["protocol_id"] == PROTOCOL_ID
-    assert report["tool_version"] == "1.1.0"
+    assert report["tool_version"] == "1.1.1"
     assert report["task_ids"] == list(TASKS)
     assert set(report["fixture_sha256"]) == {
         "catalog.html",
