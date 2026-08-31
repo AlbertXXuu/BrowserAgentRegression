@@ -6,9 +6,9 @@
 
 [English](README.md) · [证据协议](docs/evidence-schema.md) · [v1 证据](docs/evidence/v1.0.0-calibration.json)
 
-> 版本状态：当前软件是 `v1.1.1` 收尾维护版；研究协议与证据基线仍是不可变的
-> `v1.0.0` 公开正式版。收尾版本只处理展示与维护，不产生新的回归结论；`v1.1.1`
-> 修正文档中的当前软件克隆目标。详见
+> 版本状态：当前软件是 `v1.1.2` 维护补丁；研究协议与证据基线仍是不可变的
+> `v1.0.0` 公开正式版。`v1.1.2` 保持该边界，只修复 Studio 检查点标签的容纳与同行
+> 节点等高布局，不产生新的回归结论。详见
 > [维护政策](docs/MAINTENANCE.md)与[作品证据页](PORTFOLIO.md)。
 
 Browser Agent Regression 是一个本地优先的浏览器 Agent 回归工具，用来回答：**一次模型、
@@ -25,7 +25,7 @@ driver；模型适配器可以把同一证据协议用于真实 Agent 实验。
 支持 Python 3.11–3.13。
 
 ```powershell
-git clone --branch v1.1.1 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
+git clone --branch v1.1.2 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
 cd BrowserAgentRegression
 
 python -m venv .venv
