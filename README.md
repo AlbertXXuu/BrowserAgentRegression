@@ -10,10 +10,10 @@
 
 [简体中文](README.zh-CN.md) · [Evidence schema](docs/evidence-schema.md) · [v1 evidence](docs/evidence/v1.0.0-calibration.json)
 
-> Version status: current software is the `v1.1.1` closure maintenance release. The research
-> protocol and evidence baseline remain the immutable `v1.0.0` public release. The closure line
-> adds presentation and maintenance work, not a new regression claim; `v1.1.1` corrects the
-> documented current-software clone target. See the
+> Version status: current software is the `v1.1.2` maintenance patch. The research protocol and
+> evidence baseline remain the immutable `v1.0.0` public release. `v1.1.2` keeps that boundary and
+> fixes checkpoint-label containment and equal row geometry in the Studio; it does not add a new
+> regression claim. See the
 > [maintenance policy](docs/MAINTENANCE.md) and [portfolio evidence](PORTFOLIO.md).
 
 Browser Agent Regression is a local-first harness for answering one practical question: **did a
@@ -31,7 +31,7 @@ model-backed adapters can apply the same evidence protocol to real-agent experim
 Python 3.11–3.13 is supported.
 
 ```bash
-git clone --branch v1.1.1 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
+git clone --branch v1.1.2 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
 cd BrowserAgentRegression
 
 python -m venv .venv

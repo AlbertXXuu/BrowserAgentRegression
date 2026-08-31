@@ -2,6 +2,15 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
+## [1.1.2] - 2026-08-31
+
+### Fixed
+
+- Keep all three checkpoint nodes in each Studio row equal in height and align their marker,
+  percentage, and annotation tracks across the supported desktop viewport range.
+- Allow long checkpoint IDs and the first-divergence annotation to wrap inside their own grid cells
+  without overlap or horizontal overflow.
+
 ## [1.1.1] - 2026-08-31
 
 ### Fixed
@@ -48,4 +57,5 @@ All notable changes are documented here. Releases use semantic versioning.
 
 [1.0.0]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.0.0
 [1.1.0]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.1.0
-[1.1.1]: https://github.com/AlbertXXuu/BrowserAgentRegression/compare/v1.1.0...HEAD
+[1.1.1]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.1.1
+[1.1.2]: https://github.com/AlbertXXuu/BrowserAgentRegression/compare/v1.1.1...v1.1.2

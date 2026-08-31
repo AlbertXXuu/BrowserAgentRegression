@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 import pytest
+from playwright.sync_api import sync_playwright
 
 from browser_agent_regression.studio import (
     INDEX_HTML,
@@ -57,7 +58,7 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert "Run → compare → localize" in INDEX_HTML
     assert "Built-in drivers" in INDEX_HTML
     assert "Controlled changes" in INDEX_HTML
-    assert "Studio v1.1.1 · Evidence v1.0.0" in INDEX_HTML
+    assert "Studio v1.1.2 · Evidence v1.0.0" in INDEX_HTML
     assert "Evidence v1.0.0" in INDEX_HTML
     assert "position:fixed" in STUDIO_CSS
     assert ".site-header{position:fixed;z-index:100" in STUDIO_CSS
@@ -67,6 +68,11 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert 'id="checkpoint-plot"' in INDEX_HTML
     assert "renderCheckpoint" in STUDIO_JS
     assert "first divergence" in STUDIO_JS
+    assert 'checkpointLabel=id=>id.split(".").join(".<wbr>")' in STUDIO_JS
+    assert "grid-template-columns:minmax(0,1fr);grid-template-rows:12px" in STUDIO_CSS
+    assert ".checkpoint-node small{width:100%;min-height:20px" in STUDIO_CSS
+    assert "line-height:1.05;overflow-wrap:anywhere" in STUDIO_CSS
+    assert ".checkpoint-grid code{min-width:0;color:var(--muted);font-size:.75rem" in STUDIO_CSS
     assert "proof-orbit" not in INDEX_HTML
     assert "checkpoint-orbit" not in STUDIO_CSS
     assert "body{min-width:0}" in STUDIO_CSS
@@ -114,6 +120,95 @@ def test_studio_viewport_evidence_matches_the_closure_contract() -> None:
         assert payload[:8] == b"\x89PNG\r\n\x1a\n"
         assert struct.unpack(">I", payload[16:20])[0] == item["width_px"]
         assert struct.unpack(">I", payload[20:24])[0] == item["screenshot_height_px"]
+
+
+@pytest.mark.browser
+def test_current_checkpoint_labels_stay_inside_their_nodes() -> None:
+    server = StudioHTTPServer(StudioAddress(port=0))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page()
+            try:
+                for width in (900, 1024, 1280, 1440, 1600):
+                    page.set_viewport_size({"width": width, "height": 900})
+                    page.goto(base)
+                    page.wait_for_function(
+                        "document.querySelectorAll('.checkpoint-node').length === 6"
+                    )
+                    layout = page.locator(".checkpoint-node").evaluate_all(
+                        """nodes => {
+                            const tolerance = 0.5;
+                            const contained = nodes.every(node => {
+                                const parent = node.getBoundingClientRect();
+                                return [...node.children].every(child => {
+                                    const rect = child.getBoundingClientRect();
+                                    return rect.left >= parent.left - tolerance
+                                        && rect.right <= parent.right + tolerance
+                                        && rect.top >= parent.top - tolerance
+                                        && rect.bottom <= parent.bottom + tolerance;
+                                });
+                            });
+                            const candidates = nodes
+                                .filter(node => node.classList.contains('candidate'))
+                                .map(node => node.getBoundingClientRect());
+                            const equalRowHeights = ['reference', 'candidate'].every(kind => {
+                                const row = nodes.filter(node => node.classList.contains(kind));
+                                const heights = row.map(node => node.getBoundingClientRect().height);
+                                return Math.max(...heights) - Math.min(...heights) <= tolerance;
+                            });
+                            const alignedRowContent = ['reference', 'candidate'].every(kind => {
+                                const row = nodes.filter(node => node.classList.contains(kind));
+                                return ['i', 'b', 'small'].every(selector => {
+                                    const tops = row.map(node => {
+                                        const child = node.querySelector(selector);
+                                        return child.getBoundingClientRect().top
+                                            - node.getBoundingClientRect().top;
+                                    });
+                                    return Math.max(...tops) - Math.min(...tops) <= tolerance;
+                                });
+                            });
+                            const internalOverlap = nodes.some(node => {
+                                const percentage = node.querySelector('b').getBoundingClientRect();
+                                const annotation = node.querySelector('small').getBoundingClientRect();
+                                return Math.min(percentage.right, annotation.right)
+                                        - Math.max(percentage.left, annotation.left) > tolerance
+                                    && Math.min(percentage.bottom, annotation.bottom)
+                                        - Math.max(percentage.top, annotation.top) > tolerance;
+                            });
+                            const adjacentOverlap = candidates.slice(0, -1).some((rect, index) => {
+                                const next = candidates[index + 1];
+                                return Math.min(rect.right, next.right)
+                                        - Math.max(rect.left, next.left) > tolerance
+                                    && Math.min(rect.bottom, next.bottom)
+                                        - Math.max(rect.top, next.top) > tolerance;
+                            });
+                            return {
+                                contained,
+                                equalRowHeights,
+                                alignedRowContent,
+                                internalOverlap,
+                                adjacentOverlap,
+                            };
+                        }"""
+                    )
+                    assert layout == {
+                        "contained": True,
+                        "equalRowHeights": True,
+                        "alignedRowContent": True,
+                        "internalOverlap": False,
+                        "adjacentOverlap": False,
+                    }
+            finally:
+                browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
 
 
 def test_studio_rejects_non_loopback_hosts() -> None:
