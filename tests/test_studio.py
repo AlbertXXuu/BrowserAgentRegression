@@ -68,19 +68,22 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert 'id="checkpoint-plot"' in INDEX_HTML
     assert "renderCheckpoint" in STUDIO_JS
     assert "first divergence" in STUDIO_JS
-    assert 'checkpointLabel=id=>id.split(".").join(".<wbr>")' in STUDIO_JS
     assert "grid-template-columns:minmax(0,1fr);grid-template-rows:12px" in STUDIO_CSS
     assert ".checkpoint-node small{width:100%;min-height:20px" in STUDIO_CSS
-    assert "line-height:1.05;overflow-wrap:anywhere" in STUDIO_CSS
-    assert ".checkpoint-grid code{min-width:0;color:var(--muted);font-size:.75rem" in STUDIO_CSS
     assert "proof-orbit" not in INDEX_HTML
     assert "checkpoint-orbit" not in STUDIO_CSS
     assert "body{min-width:0}" in STUDIO_CSS
     assert "@media(max-width:1099px)" in STUDIO_CSS
     assert ".site-header nav a{display:inline-flex;min-height:44px" in STUDIO_CSS
     assert ".text-link{display:inline-flex;min-height:44px" in STUDIO_CSS
+    assert INDEX_HTML.count('class="link-label"') == 2
+    assert INDEX_HTML.count('class="link-arrow" aria-hidden="true"') == 2
+    assert ".liquid-button,.text-link{text-decoration:none}" in STUDIO_CSS
+    assert ".text-link .link-label{text-decoration:underline" in STUDIO_CSS
+    assert ".link-arrow{display:inline-block;flex:0 0 auto;text-decoration:none}" in STUDIO_CSS
     assert ".liquid-button:focus-visible{outline:3px solid" in STUDIO_CSS
     assert ".liquid-button{transition-property:transform" in STUDIO_CSS
+    assert "background:rgb(147 197 253 / 28%);color:var(--blue)" in STUDIO_CSS
 
 
 def test_demo_repetition_control_is_bounded() -> None:
@@ -134,12 +137,39 @@ def test_current_checkpoint_labels_stay_inside_their_nodes() -> None:
             browser = playwright.chromium.launch()
             page = browser.new_page()
             try:
-                for width in (900, 1024, 1280, 1440, 1600):
+                for width in (1920, 1600, 1440, 1280, 1100, 1024, 900, 390):
                     page.set_viewport_size({"width": width, "height": 900})
                     page.goto(base)
                     page.wait_for_function(
                         "document.querySelectorAll('.checkpoint-node').length === 6"
                     )
+                    page.evaluate("document.fonts.ready")
+                    assert page.locator(".checkpoint-label").all_text_contents() == [
+                        "Email accepted", "Shipping selected", "Confirmed"
+                    ]
+                    assert page.locator(".checkpoint-label").evaluate_all(
+                        "labels => labels.map(label => label.title)"
+                    ) == [
+                        "checkout.email.accepted",
+                        "checkout.shipping.selected",
+                        "checkout.confirmed",
+                    ]
+                    words_are_whole = page.locator(
+                        ".checkpoint-node small, .checkpoint-label"
+                    ).evaluate_all(
+                        """labels => labels.every(label => {
+                            const text = label.firstChild;
+                            if (!text) return true;
+                            return [...text.textContent.matchAll(/\\S+/g)].every(word => {
+                                const range = document.createRange();
+                                range.setStart(text, word.index);
+                                range.setEnd(text, word.index + word[0].length);
+                                const tops = [...range.getClientRects()].map(rect => rect.top);
+                                return Math.max(...tops) - Math.min(...tops) <= 0.5;
+                            });
+                        })"""
+                    )
+                    assert words_are_whole, f"Annotation words split at {width}px"
                     layout = page.locator(".checkpoint-node").evaluate_all(
                         """nodes => {
                             const tolerance = 0.5;
@@ -203,6 +233,69 @@ def test_current_checkpoint_labels_stay_inside_their_nodes() -> None:
                         "internalOverlap": False,
                         "adjacentOverlap": False,
                     }
+            finally:
+                browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+@pytest.mark.browser
+def test_home_preserves_url_and_evidence_for_pointer_keyboard_and_reduced_motion() -> None:
+    server = StudioHTTPServer(StudioAddress(port=0))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            try:
+                page = browser.new_page(viewport={"width": 1440, "height": 900})
+                page.goto(f"{base}/#method")
+                page.wait_for_function("() => document.querySelectorAll('.checkpoint-node').length === 6")
+                page.evaluate("history.replaceState(null, '', '?source=local#method')")
+                page.locator("#demo-runs").select_option("3")
+                home = page.get_by_role("button", name="AlvenX — Back to top")
+                page.evaluate("""() => {
+                    window.__homeDocument = 'retained';
+                    window.__homeCalls = [];
+                    const scroll = window.scrollTo.bind(window);
+                    window.scrollTo = options => { window.__homeCalls.push(options); scroll(options); };
+                }""")
+                state = """() => ({url: location.href, history: history.length,
+                    runs: document.querySelector('#demo-runs').value,
+                    tasks: document.querySelector('#task-grid').textContent,
+                    evidence: document.querySelector('#evidence-source').textContent,
+                    result: document.querySelector('#run-status').textContent,
+                    document: window.__homeDocument})"""
+                before = page.evaluate(state)
+                for reduced in ("no-preference", "reduce"):
+                    page.emulate_media(reduced_motion=reduced)
+                    for activation in ("click", "Enter", "Space"):
+                        page.evaluate("window.scrollTo({top:0,behavior:'instant'}); window.__homeCalls=[]")
+                        if activation == "click":
+                            home.click()
+                        else:
+                            home.evaluate("element => element.focus({preventScroll:true})")
+                            home.press(activation)
+                        assert page.evaluate("window.scrollY") == 0
+                        assert page.evaluate("window.__homeCalls") == []
+                        page.evaluate("window.scrollTo({top:document.body.scrollHeight,behavior:'instant'}); window.__homeCalls=[]")
+                        assert page.evaluate("window.scrollY") > 0
+                        if activation == "click":
+                            home.click()
+                        else:
+                            home.evaluate("element => element.focus({preventScroll:true})")
+                            home.press(activation)
+                        page.wait_for_function("() => window.scrollY === 0")
+                        assert page.evaluate("window.__homeCalls") == [{
+                            "top": 0, "left": 0,
+                            "behavior": "instant" if reduced == "reduce" else "smooth",
+                        }]
+                        assert page.evaluate(state) == before
+                assert home.evaluate("element => getComputedStyle(element).width") == "160px"
+                assert home.evaluate("element => getComputedStyle(element).outlineStyle") == "solid"
             finally:
                 browser.close()
     finally:
