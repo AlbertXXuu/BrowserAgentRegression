@@ -1,10 +1,18 @@
 # Brand assets
 
-`alvenx-wordmark.svg` uses the shared AlvenX outlined wordmark with the project-specific
-signal line `AGENT RELIABILITY`. The wordmark composition is original project work. Its glyph
-outlines are derived from Instrument Sans at the AlvenX brand's locked width and weight.
-It consumes canonical brand revision `2026-08-22.4`; do not independently alter
-the connected-letter geometry, gradient, or signal centering in this repository.
+`alvenx-wordmark.svg` is an unchanged copy of the shared, subtitle-free AlvenX
+outlined wordmark. English and Chinese READMEs display it at width 320, with
+`AGENT RELIABILITY` rendered as separate text below the image. Wordmark canvas
+alignment revision `2026-09-04.1` centers the visible outlines within the
+existing 330×100 canvas. The glyph and color baseline remains `2026-08-22.4`;
+the AX brand baseline remains `2026-08-24.1`. The Studio consumes this same
+centered wordmark through its vendored runtime copy.
+
+`alvenx-lockup.svg` preserves the original project-specific composition, including
+its outlined `AGENT RELIABILITY` signal, for social and promotional artwork.
+The glyph outlines are derived from Instrument Sans at the AlvenX brand's locked
+width and weight. Do not independently alter the connected-letter geometry,
+gradient, or signal centering in this repository.
 
 Instrument Sans is distributed under the SIL Open Font License 1.1; the complete notice is
 preserved in [InstrumentSans-OFL.txt](InstrumentSans-OFL.txt).
