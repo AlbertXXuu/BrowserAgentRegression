@@ -4,6 +4,14 @@ Current public release: `v1.1.2`
 Research/evidence baseline: immutable `v1.0.0`
 Development mode: maintenance; no new research claim
 
+## Current engineering stage — 2026-09-26
+
+Use the existing README calibration/comparison commands and saved checkpoint evidence to verify
+the input-to-report path and explain the first failed checkpoint. Fix observed command, report or
+documentation gaps and test the affected success/failure behavior. Preserve the frozen 3×4 evidence;
+new actual-agent comparisons need named configuration, repetitions and resource limits. External
+participants are not required for this engineering stage.
+
 ## Frozen release surface
 
 The `v1.0.0` tag and GitHub Release are immutable. The v1 compatibility promise covers:
