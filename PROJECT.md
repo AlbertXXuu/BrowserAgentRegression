@@ -1,5 +1,13 @@
 # Project Charter — Browser Agent Regression
 
+<!-- 2026-09-26 execution routing -->
+## Current engineering stage — 2026-09-26
+
+The Phase 0 timebox and schema references below are historical. Current CLI/schema behavior is documented in [README](README.md), [evidence schema](docs/evidence-schema.md) and [maintenance](docs/MAINTENANCE.md). The next stage verifies the existing comparison, report and first-failure explanation, fixing only observed gaps. Actual-agent expansion is separately scoped and budgeted.
+
+## Historical project plan
+
+
 **Status:** v1 technical release; current focus is setup, evidence readability, and adapter integration<br>
 **Decision date:** 2026-08-15<br>
 **Time box:** 5–7 days<br>
