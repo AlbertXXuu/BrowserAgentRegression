@@ -6,7 +6,9 @@
 
 # Browser Agent Regression
 
-[English](README.md) · [证据协议](docs/evidence-schema.md) · [v1 证据](docs/evidence/v1.0.0-calibration.json)
+[English](README.md) · [简体中文](README.zh-CN.md) · [证据协议](docs/evidence-schema.md) · [v1 JSON](docs/evidence/v1.0.0-calibration.json)
+
+v1 报告：[English](docs/evidence/v1.0.0-report.md) · [简体中文](docs/evidence/v1.0.0-report.zh-CN.md)
 
 > 版本状态：当前软件是 `v1.1.2` 维护补丁；研究协议与证据基线仍是不可变的
 > `v1.0.0` 公开正式版。`v1.1.2` 保持该边界，只修复 Studio 检查点标签的容纳与同行
@@ -74,6 +76,9 @@ browser-agent-regression oracle --runs 30 --output runs\oracle.json
 # Reference 与 popup-blind candidate 的受控对照
 browser-agent-regression calibrate --runs 10 --output runs\calibration.json
 ```
+
+完整校准报告：[English](docs/evidence/v1.0.0-report.md) ·
+[简体中文](docs/evidence/v1.0.0-report.zh-CN.md)，包含结果、首个失败检查点及独立的真实 Agent 可行性说明。
 
 仓库内 v1 校准证据对每个 baseline/candidate/任务/变体单元重复三次。clean 页面保持一致；
 popup overlay 下 candidate 的三个任务均从 100% 降至 0%，首个失败检查点的一致率均为 100%。
