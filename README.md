@@ -10,7 +10,9 @@
 ![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-[简体中文](README.zh-CN.md) · [Evidence schema](docs/evidence-schema.md) · [v1 evidence](docs/evidence/v1.0.0-calibration.json)
+[English](README.md) · [简体中文](README.zh-CN.md) · [Evidence schema](docs/evidence-schema.md) · [v1 JSON](docs/evidence/v1.0.0-calibration.json)
+
+v1 report: [English](docs/evidence/v1.0.0-report.md) · [简体中文](docs/evidence/v1.0.0-report.zh-CN.md)
 
 > Version status: current software is the `v1.1.2` maintenance patch. The research protocol and
 > evidence baseline remain the immutable `v1.0.0` public release. `v1.1.2` keeps that boundary and
@@ -100,6 +102,10 @@ browser-agent-regression oracle \
 ```
 
 ## Evidence
+
+Read the calibration report in [English](docs/evidence/v1.0.0-report.md) or
+[简体中文](docs/evidence/v1.0.0-report.zh-CN.md), with results, first-failure checkpoints, and
+the separate real-agent feasibility boundary.
 
 The committed v1 calibration repeats each baseline/candidate/task/variant cell three times. The
 reference and candidate match on clean pages; the candidate falls from 100% to 0% under the popup
