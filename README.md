@@ -14,6 +14,11 @@
 
 v1 report: [English](docs/evidence/v1.0.0-report.md) · [简体中文](docs/evidence/v1.0.0-report.zh-CN.md)
 
+Engineering case: [English](docs/case-studies/browser-agent-independent-scoring.md) ·
+[简体中文](docs/case-studies/browser-agent-independent-scoring.zh-CN.md) ·
+Website: [English](https://alvenx.com/notes/engineering/browser-agent-independent-scoring) ·
+[简体中文](https://alvenx.com/notes/engineering/browser-agent-independent-scoring-zh)
+
 > Version status: current software is the `v1.1.2` maintenance patch. The research protocol and
 > evidence baseline remain the immutable `v1.0.0` public release. `v1.1.2` keeps that boundary and
 > fixes checkpoint-label containment and equal row geometry in the Studio; it does not add a new

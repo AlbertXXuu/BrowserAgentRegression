@@ -10,6 +10,11 @@
 
 v1 报告：[English](docs/evidence/v1.0.0-report.md) · [简体中文](docs/evidence/v1.0.0-report.zh-CN.md)
 
+工程案例：[English](docs/case-studies/browser-agent-independent-scoring.md) ·
+[简体中文](docs/case-studies/browser-agent-independent-scoring.zh-CN.md) ·
+网站阅读版：[English](https://alvenx.com/notes/engineering/browser-agent-independent-scoring) ·
+[简体中文](https://alvenx.com/notes/engineering/browser-agent-independent-scoring-zh)
+
 > 版本状态：当前软件是 `v1.1.2` 维护补丁；研究协议与证据基线仍是不可变的
 > `v1.0.0` 公开正式版。`v1.1.2` 保持该边界，只修复 Studio 检查点标签的容纳与同行
 > 节点等高布局，不产生新的回归结论。详见
