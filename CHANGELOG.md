@@ -2,6 +2,14 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
+## [Unreleased]
+
+### Fixed
+
+- Reject incomplete or overfilled task/driver/variant cells even when summaries are recomputed.
+  Bind drivers and evidence kind to the report command, and real-agent drivers to the declared
+  agent/model. Retain the existing schema and frozen evidence files.
+
 ## [1.1.2] - 2026-08-31
 
 ### Fixed
