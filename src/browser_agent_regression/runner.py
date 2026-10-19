@@ -323,8 +323,8 @@ def build_report(
 def validate_report(report: dict[str, Any]) -> None:
     """Validate v1 evidence and retained 0.2 Phase 0 evidence.
 
-    Validation checks the report's internal accounting and binds it to the
-    packaged fixture bytes. Durations, timestamps, and browser versions are
+    Validation checks complete declared matrix coverage, internal accounting,
+    and packaged fixture bytes. Durations, timestamps, and browser versions are
     evidence, but are intentionally not expected to be reproducible byte for byte.
     """
 
@@ -345,6 +345,9 @@ def validate_report(report: dict[str, Any]) -> None:
         report.get("evidence_kind") in {"synthetic-calibration", "real-agent"},
         "unknown evidence kind",
     )
+    command = report["command"]
+    expected_kind = "real-agent" if command == "deepseek" else "synthetic-calibration"
+    require(report["evidence_kind"] == expected_kind, "evidence kind does not match command")
     created_at = report.get("created_at")
     require(isinstance(created_at, str), "created_at must be an ISO timestamp")
     try:
@@ -371,7 +374,19 @@ def validate_report(report: dict[str, Any]) -> None:
     require(all(variant in VARIANTS for variant in variants), "report contains an unknown variant")
     require(len(variants) == len(set(variants)), "configuration variants contains duplicates")
     runs = configuration.get("runs_per_driver_task_variant")
-    require(isinstance(runs, int) and runs >= 1, "run count must be a positive integer")
+    require(type(runs) is int and runs >= 1, "run count must be a positive integer")
+
+    if command == "deepseek":
+        identity = configuration.get("run_identity")
+        require(isinstance(identity, dict), "real-agent run identity must be an object")
+        require(identity.get("agent") == "browser-use", "unknown real-agent identity agent")
+        model = identity.get("model")
+        require(model in ("deepseek-v4-flash", "deepseek-v4-pro"), "unknown real-agent model")
+        expected_drivers = (f"browser-use/{model}",)
+    elif command == "oracle":
+        expected_drivers = ("reference",)
+    else:
+        expected_drivers = ("reference", "popup-blind")
 
     raw_attempts = report.get("attempts")
     require(isinstance(raw_attempts, list) and bool(raw_attempts), "attempts must be non-empty")
@@ -396,6 +411,10 @@ def validate_report(report: dict[str, Any]) -> None:
             f"attempt {index} references an unknown driver",
         )
         require(
+            attempt.driver in expected_drivers,
+            f"attempt {index} driver does not match command and run identity",
+        )
+        require(
             tuple(attempt.checkpoints) == TASK_CHECKPOINTS[attempt.task_id],
             f"attempt {index} checkpoint contract mismatch",
         )
@@ -411,6 +430,17 @@ def validate_report(report: dict[str, Any]) -> None:
             f"attempt {index} pass flag is inconsistent",
         )
         attempts.append(attempt)
+
+    counts = Counter((attempt.task_id, attempt.driver, attempt.variant) for attempt in attempts)
+    for task_id in tasks:
+        for driver in expected_drivers:
+            for variant in variants:
+                count = counts[(task_id, driver, variant)]
+                require(
+                    count == runs,
+                    f"attempt coverage mismatch for {task_id} / {driver} / {variant}: "
+                    f"expected {runs}, found {count}",
+                )
 
     require(report.get("summaries") == summarize(attempts), "summary accounting mismatch")
     expected_regressions = (

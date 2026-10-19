@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -6,6 +7,7 @@ from playwright.sync_api import Error as PlaywrightError
 
 import browser_agent_regression.cli as cli_module
 from browser_agent_regression.cli import _masked_windows_input, build_parser
+from browser_agent_regression.runner import Attempt, find_regressions, summarize
 
 
 def test_masked_windows_input_shows_feedback_and_supports_backspace(capsys) -> None:
@@ -95,3 +97,20 @@ def test_missing_browser_error_is_actionable(monkeypatch, capsys) -> None:
 
     assert cli_module.main(["demo", "--task", "checkout.basic.v1"]) == 2
     assert "python -m playwright install chromium" in capsys.readouterr().err
+
+
+def test_verify_rejects_dropped_failures_even_with_consistent_summaries(tmp_path, capsys) -> None:
+    source = (
+        Path(__file__).resolve().parents[1] / "docs" / "evidence" / "v1.0.0-calibration.json"
+    )
+    report = json.loads(source.read_text(encoding="utf-8"))
+    report["attempts"] = [raw for raw in report["attempts"] if raw["passed"]]
+    report["summaries"] = summarize([Attempt(**raw) for raw in report["attempts"]])
+    report["regressions"] = find_regressions(report["summaries"])
+    report_path = tmp_path / "incomplete.json"
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+
+    assert cli_module.main(["verify", "--report", str(report_path)]) == 2
+    rendered = capsys.readouterr()
+    assert "attempt coverage mismatch" in rendered.err
+    assert "PASS" not in rendered.out
