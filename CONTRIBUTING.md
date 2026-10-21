@@ -5,6 +5,10 @@ regressions and concrete feedback from developers who maintain browser agents. U
 [workflow-feedback form](https://github.com/AlbertXXuu/BrowserAgentRegression/issues/new?template=workflow-feedback.yml)
 for setup, evidence, and adapter-integration feedback.
 
+For the named MCP browser integration discussed in Issue #14, start with the
+[Hronaut one-task pilot recipe](docs/integrations/hronaut-mcp.md). It maps the existing seams,
+provides the runnable BAR baseline, and lists the connection details needed for an adapter proposal.
+
 ## Before opening a change
 
 - Read the scope, non-goals, and gates in [PROJECT.md](PROJECT.md).
