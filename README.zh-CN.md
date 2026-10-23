@@ -15,9 +15,9 @@ v1 报告：[English](docs/evidence/v1.0.0-report.md) · [简体中文](docs/evi
 网站阅读版：[English](https://alvenx.com/notes/engineering/browser-agent-independent-scoring) ·
 [简体中文](https://alvenx.com/notes/engineering/browser-agent-independent-scoring-zh)
 
-> 版本状态：当前软件是 `v1.1.2` 维护补丁；研究协议与证据基线仍是不可变的
-> `v1.0.0` 公开正式版。`v1.1.2` 保持该边界，只修复 Studio 检查点标签的容纳与同行
-> 节点等高布局，不产生新的回归结论。详见
+> 版本状态：当前软件是 `v1.1.3` 维护补丁；研究协议与证据基线仍是不可变的
+> `v1.0.0` 公开正式版。`v1.1.3` 验证声明的尝试矩阵完整性及命令、driver 身份，
+> 并提供单任务 MCP 接入试验说明。Hronaut 适配器仍待实现。详见
 > [维护政策](docs/MAINTENANCE.md)与[作品证据页](PORTFOLIO.md)。
 
 Browser Agent Regression 是一个本地优先的浏览器 Agent 回归工具，用来回答：**一次模型、
@@ -34,7 +34,7 @@ driver；模型适配器可以把同一证据协议用于真实 Agent 实验。
 支持 Python 3.11–3.13。
 
 ```powershell
-git clone --branch v1.1.2 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
+git clone --branch v1.1.3 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
 cd BrowserAgentRegression
 
 python -m venv .venv

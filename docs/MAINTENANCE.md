@@ -1,6 +1,6 @@
 # Maintenance policy
 
-Current public release: `v1.1.2`
+Current public release: `v1.1.3`
 Research/evidence baseline: immutable `v1.0.0`
 Development mode: maintenance; no new research claim
 

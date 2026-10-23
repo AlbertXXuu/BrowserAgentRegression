@@ -191,7 +191,7 @@ INDEX_HTML = """<!doctype html>
       <nav aria-label="Page sections">
         <a href="#evidence">Evidence</a><a href="#tasks">Tasks</a><a href="#boundary">Method</a>
       </nav>
-      <span class="local-badge"><i aria-hidden="true"></i>Studio v1.1.2 · Evidence v1.0.0</span>
+      <span class="local-badge"><i aria-hidden="true"></i>Studio v1.1.3 · Evidence v1.0.0</span>
     </header>
 
     <main id="top">
