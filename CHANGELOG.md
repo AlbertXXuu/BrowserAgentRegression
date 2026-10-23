@@ -2,13 +2,23 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
-## [Unreleased]
+## [1.1.3] - 2026-10-24
 
 ### Fixed
 
 - Reject incomplete or overfilled task/driver/variant cells even when summaries are recomputed.
   Bind drivers and evidence kind to the report command, and real-agent drivers to the declared
   agent/model. Retain the existing schema and frozen evidence files.
+
+### Added
+
+- Document the one-task Hronaut MCP integration pilot and link it from CONTRIBUTING.
+  The guide includes runnable BAR baseline commands, current adapter seams, validation cases,
+  and the connection details needed before implementing a named adapter.
+
+### Changed
+
+- Update package, CLI, Studio and bilingual installation instructions to `v1.1.3`.
 
 ## [1.1.2] - 2026-08-31
 
@@ -67,3 +77,4 @@ All notable changes are documented here. Releases use semantic versioning.
 [1.1.0]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.1.0
 [1.1.1]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.1.1
 [1.1.2]: https://github.com/AlbertXXuu/BrowserAgentRegression/compare/v1.1.1...v1.1.2
+[1.1.3]: https://github.com/AlbertXXuu/BrowserAgentRegression/releases/tag/v1.1.3

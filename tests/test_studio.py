@@ -58,7 +58,7 @@ def test_studio_uses_locked_interface_tokens_and_accessible_controls() -> None:
     assert "Run → compare → localize" in INDEX_HTML
     assert "Built-in drivers" in INDEX_HTML
     assert "Controlled changes" in INDEX_HTML
-    assert "Studio v1.1.2 · Evidence v1.0.0" in INDEX_HTML
+    assert "Studio v1.1.3 · Evidence v1.0.0" in INDEX_HTML
     assert "Evidence v1.0.0" in INDEX_HTML
     assert "position:fixed" in STUDIO_CSS
     assert ".site-header{position:fixed;z-index:100" in STUDIO_CSS

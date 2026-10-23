@@ -19,10 +19,10 @@ Engineering case: [English](docs/case-studies/browser-agent-independent-scoring.
 Website: [English](https://alvenx.com/notes/engineering/browser-agent-independent-scoring) ·
 [简体中文](https://alvenx.com/notes/engineering/browser-agent-independent-scoring-zh)
 
-> Version status: current software is the `v1.1.2` maintenance patch. The research protocol and
-> evidence baseline remain the immutable `v1.0.0` public release. `v1.1.2` keeps that boundary and
-> fixes checkpoint-label containment and equal row geometry in the Studio; it does not add a new
-> regression claim. See the
+> Version status: current software is the `v1.1.3` maintenance patch. The research protocol and
+> evidence baseline remain the immutable `v1.0.0` public release. `v1.1.3` validates complete
+> declared attempt matrices and command/driver identity, and documents a one-task MCP integration
+> pilot. The Hronaut adapter remains to be implemented. See the
 > [maintenance policy](docs/MAINTENANCE.md) and [portfolio evidence](PORTFOLIO.md).
 
 Browser Agent Regression is a local-first harness for answering one practical question: **did a
@@ -40,7 +40,7 @@ model-backed adapters can apply the same evidence protocol to real-agent experim
 Python 3.11–3.13 is supported.
 
 ```bash
-git clone --branch v1.1.2 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
+git clone --branch v1.1.3 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git
 cd BrowserAgentRegression
 
 python -m venv .venv

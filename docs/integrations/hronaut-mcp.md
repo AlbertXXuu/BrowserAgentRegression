@@ -15,7 +15,7 @@ Use a fresh clone so existing work is preserved. Use Python 3.11–3.13. The Iss
 was reported as Linux/Python 3.12; record the versions actually used for this pilot.
 
 ```sh
-git clone --branch main https://github.com/AlbertXXuu/BrowserAgentRegression.git bar-mcp-pilot
+git clone --branch v1.1.3 --depth 1 https://github.com/AlbertXXuu/BrowserAgentRegression.git bar-mcp-pilot
 cd bar-mcp-pilot
 git rev-parse HEAD
 ```
@@ -45,7 +45,8 @@ python -m venv .venv
 Expected: `doctor` succeeds; the demo reports one controlled regression; `verify` prints
 `PASS schema=1.0 command=demo attempts=4`. These four attempts are the two built-in drivers on
 two variants. Keep this `synthetic-calibration` report separate from the one-attempt Hronaut pilot.
-The published `v1.1.2` tag predates PR #18; use the recorded `main` revision for the new validation.
+The `v1.1.3` release includes the completeness fix and this guide. Record the exact revision above;
+the earlier `v1.1.2` tag predates the fix.
 
 ## 2. Make the pilot page and goal available
 
