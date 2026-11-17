@@ -36,8 +36,10 @@ not an agent's self-reported success, determine the result.
 2. every attempt contains exactly the ordered checkpoints for its task;
 3. `first_failed_checkpoint` and `passed` agree with checkpoint/error evidence;
 4. the command determines the expected drivers: `reference` for `oracle`, both `reference` and
-   `popup-blind` for `demo`/`calibrate`, or the single Browser Use driver named by the `deepseek`
-   run identity's agent/model; the evidence kind must also match the command;
+   `popup-blind` for `demo`/`calibrate`, or the single real-agent driver `<agent>/<model>` named
+   by the run identity: `browser-use` for `deepseek`, `hronaut-mcp` for `hronaut-mcp-deepseek`
+   (whose identity must also name the negotiated MCP protocol and server); the evidence kind must
+   also match the command;
 5. every declared task/driver/variant cell contains exactly the positive integer run count,
    including failed attempts;
 6. summaries and regressions recompute exactly from attempts;

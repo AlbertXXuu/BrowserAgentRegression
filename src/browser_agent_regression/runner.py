@@ -25,7 +25,15 @@ Driver = Literal[
     "popup-blind",
     "browser-use/deepseek-v4-flash",
     "browser-use/deepseek-v4-pro",
+    "hronaut-mcp/deepseek-v4-flash",
+    "hronaut-mcp/deepseek-v4-pro",
 ]
+# Each real-agent command names exactly one agent; its driver is "<agent>/<model>".
+REAL_AGENT_COMMANDS: dict[str, str] = {
+    "deepseek": "browser-use",
+    "hronaut-mcp-deepseek": "hronaut-mcp",
+}
+REAL_AGENT_MODELS: tuple[str, ...] = ("deepseek-v4-flash", "deepseek-v4-pro")
 TaskId = Literal[
     "checkout.basic.v1",
     "catalog.find-and-save.v1",
@@ -338,7 +346,7 @@ def validate_report(report: dict[str, Any]) -> None:
         require(report.get("protocol_id") == PROTOCOL_ID, "protocol identifier mismatch")
         require(isinstance(report.get("tool_version"), str), "tool version is missing")
     require(
-        report.get("command") in {"demo", "oracle", "calibrate", "deepseek"},
+        report.get("command") in {"demo", "oracle", "calibrate", *REAL_AGENT_COMMANDS},
         "unknown report command",
     )
     require(
@@ -346,7 +354,7 @@ def validate_report(report: dict[str, Any]) -> None:
         "unknown evidence kind",
     )
     command = report["command"]
-    expected_kind = "real-agent" if command == "deepseek" else "synthetic-calibration"
+    expected_kind = "real-agent" if command in REAL_AGENT_COMMANDS else "synthetic-calibration"
     require(report["evidence_kind"] == expected_kind, "evidence kind does not match command")
     created_at = report.get("created_at")
     require(isinstance(created_at, str), "created_at must be an ISO timestamp")
@@ -376,13 +384,22 @@ def validate_report(report: dict[str, Any]) -> None:
     runs = configuration.get("runs_per_driver_task_variant")
     require(type(runs) is int and runs >= 1, "run count must be a positive integer")
 
-    if command == "deepseek":
+    if command in REAL_AGENT_COMMANDS:
+        agent = REAL_AGENT_COMMANDS[command]
         identity = configuration.get("run_identity")
         require(isinstance(identity, dict), "real-agent run identity must be an object")
-        require(identity.get("agent") == "browser-use", "unknown real-agent identity agent")
+        require(identity.get("agent") == agent, "unknown real-agent identity agent")
         model = identity.get("model")
-        require(model in ("deepseek-v4-flash", "deepseek-v4-pro"), "unknown real-agent model")
-        expected_drivers = (f"browser-use/{model}",)
+        require(model in REAL_AGENT_MODELS, "unknown real-agent model")
+        if agent == "hronaut-mcp":
+            # The negotiated MCP boundary is part of what this evidence claims.
+            for name in ("mcp_protocol_version", "mcp_server_name", "mcp_server_version"):
+                value = identity.get(name)
+                require(
+                    isinstance(value, str) and bool(value.strip()),
+                    f"Hronaut MCP run identity is missing {name}",
+                )
+        expected_drivers = (f"{agent}/{model}",)
     elif command == "oracle":
         expected_drivers = ("reference",)
     else:
@@ -405,8 +422,11 @@ def validate_report(report: dict[str, Any]) -> None:
             in {
                 "reference",
                 "popup-blind",
-                "browser-use/deepseek-v4-flash",
-                "browser-use/deepseek-v4-pro",
+                *(
+                    f"{agent}/{model}"
+                    for agent in REAL_AGENT_COMMANDS.values()
+                    for model in REAL_AGENT_MODELS
+                ),
             },
             f"attempt {index} references an unknown driver",
         )

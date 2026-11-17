@@ -18,6 +18,7 @@ from playwright.sync_api import sync_playwright
 
 from browser_agent_regression import __version__
 from browser_agent_regression.runner import (
+    REAL_AGENT_MODELS,
     TASK_FIXTURES,
     TASKS,
     VARIANTS,
@@ -196,25 +197,31 @@ def _demo(args: argparse.Namespace) -> int:
 
 
 def _resolve_deepseek_api_key() -> str:
-    api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    return _resolve_api_key(
+        "DEEPSEEK_API_KEY", "DeepSeek", "https://platform.deepseek.com/api_keys"
+    )
+
+
+def _resolve_api_key(variable: str, provider: str, keys_url: str) -> str:
+    api_key = os.environ.get(variable, "").strip()
     if api_key:
         return api_key
     if not sys.stdin.isatty():
         raise RuntimeError(
-            "DEEPSEEK_API_KEY is missing and hidden input is unavailable. "
+            f"{variable} is missing and hidden input is unavailable. "
             "Set it in the current process or CI secret store."
         )
 
-    print("No DEEPSEEK_API_KEY was found.")
-    print("Create or copy a key at https://platform.deepseek.com/api_keys")
+    print(f"No {variable} was found.")
+    print(f"Create or copy a key at {keys_url}")
     if os.name == "nt":
         api_key = _masked_windows_input(
-            "DeepSeek API key (masked with *; not stored): "
+            f"{provider} API key (masked with *; not stored): "
         ).strip()
     else:
-        api_key = getpass.getpass("DeepSeek API key (hidden; not stored): ").strip()
+        api_key = getpass.getpass(f"{provider} API key (hidden; not stored): ").strip()
     if not api_key:
-        raise RuntimeError("A DeepSeek API key is required for this command.")
+        raise RuntimeError(f"A {provider} API key is required for this command.")
     return api_key
 
 
@@ -292,6 +299,111 @@ def _deepseek(args: argparse.Namespace) -> int:
             model=args.model,
             max_steps=args.max_steps,
             headed=args.headed,
+        ),
+    )
+    _write_report(report, args.output)
+    passed = sum(attempt.passed for attempt in attempts)
+    print(f"Real-agent result: {passed}/{len(attempts)} attempts passed independent checks.")
+    for attempt in attempts:
+        if not attempt.passed:
+            print(
+                f"FAILED {attempt.task_id} [{attempt.variant}] first checkpoint: "
+                f"{attempt.first_failed_checkpoint or 'agent/runtime error'}"
+            )
+    return 0 if all(attempt.passed for attempt in attempts) else 1
+
+
+def _hronaut_mcp_deepseek(args: argparse.Namespace) -> int:
+    from browser_agent_regression import hronaut_mcp
+
+    tasks = _tasks(args.task)
+    variants = _variants(args.variant or ["clean"])
+    try:
+        url = hronaut_mcp.require_loopback_url(args.mcp_url)
+        bearer = hronaut_mcp.resolve_bearer_credential()
+        if args.preflight:
+            api_key = None
+        elif args.provider == "openrouter":
+            api_key = _resolve_api_key(
+                "OPENROUTER_API_KEY", "OpenRouter", "https://openrouter.ai/settings/keys"
+            )
+        else:
+            api_key = _resolve_deepseek_api_key()
+        connect = hronaut_mcp.sdk_connector(url, bearer)
+        model_client = (
+            None
+            if api_key is None
+            else hronaut_mcp.DeepSeekChat(
+                api_key=api_key,
+                model=args.model,
+                provider=args.provider,
+                upstream=args.upstream_provider,
+            )
+        )
+        identity = asyncio.run(
+            hronaut_mcp.probe_identity(connect, authenticated=bearer is not None)
+        )
+        attempt_count = len(tasks) * len(variants) * args.runs
+        if args.preflight:
+            print(f"Running the key-free Hronaut MCP preflight: {attempt_count} page check(s).")
+        else:
+            route = (
+                f" via OpenRouter ({args.upstream_provider})"
+                if args.provider == "openrouter"
+                else ""
+            )
+            print(
+                f"Running Hronaut MCP + {args.model}{route}: {attempt_count} agent "
+                f"attempt{'s' if attempt_count != 1 else ''}. "
+                "Each attempt may make multiple paid API requests."
+            )
+        attempts, trace, browser_version = asyncio.run(
+            hronaut_mcp.run_hronaut_matrix(
+                connect=connect,
+                model_client=model_client,
+                model=args.model,
+                identity=identity,
+                tasks=tasks,
+                variants=variants,
+                runs=args.runs,
+                max_steps=args.max_steps,
+                time_limit_seconds=args.time_limit,
+                known_secrets=tuple(secret for secret in (api_key, bearer) if secret),
+            )
+        )
+    except RuntimeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if args.trace_output is not None:
+        _write_report(trace, args.trace_output)
+    if args.preflight:
+        # A preflight has no agent and is never written as BAR evidence.
+        failed = [attempt for attempt in attempts if attempt.error is not None]
+        for attempt in failed:
+            print(f"FAILED {attempt.task_id} [{attempt.variant}]: {attempt.error}")
+        print(
+            f"Preflight result: {len(attempts) - len(failed)}/{len(attempts)} pages opened, "
+            f"bound and observed all-false on {identity.server_name} "
+            f"{identity.server_version} (MCP {identity.protocol_version})."
+        )
+        return 2 if failed else 0
+
+    describe = getattr(model_client, "describe", None)
+    report = build_report(
+        attempts,
+        command=hronaut_mcp.COMMAND,
+        runs=args.runs,
+        tasks=tasks,
+        variants=variants,
+        browser_version=browser_version,
+        evidence_kind="real-agent",
+        run_identity=hronaut_mcp.hronaut_run_identity(
+            identity=identity,
+            model=args.model,
+            max_steps=args.max_steps,
+            time_limit_seconds=args.time_limit,
+            model_route=describe() if describe is not None else None,
         ),
     )
     _write_report(report, args.output)
@@ -415,11 +527,46 @@ def build_parser() -> argparse.ArgumentParser:
     _add_run_arguments(deepseek, default_runs=1)
     deepseek.add_argument(
         "--model",
-        choices=("deepseek-v4-flash", "deepseek-v4-pro"),
+        choices=REAL_AGENT_MODELS,
         default="deepseek-v4-flash",
     )
     deepseek.add_argument("--max-steps", type=int, default=12)
     deepseek.set_defaults(handler=_deepseek)
+
+    hronaut = subparsers.add_parser(
+        "hronaut-mcp-deepseek",
+        help="Run DeepSeek through a running Hronaut MCP browser against the local fixtures.",
+    )
+    hronaut.add_argument("--runs", type=int, default=1)
+    hronaut.add_argument("--task", action="append", choices=TASKS)
+    hronaut.add_argument("--variant", action="append", choices=VARIANTS)
+    hronaut.add_argument("--output", type=Path)
+    hronaut.add_argument("--model", choices=REAL_AGENT_MODELS, default="deepseek-v4-flash")
+    hronaut.add_argument("--max-steps", type=int, default=12)
+    hronaut.add_argument("--time-limit", type=float, default=300.0, metavar="SECONDS")
+    hronaut.add_argument("--mcp-url", default="http://127.0.0.1:47812/mcp")
+    hronaut.add_argument(
+        "--provider",
+        choices=("deepseek", "openrouter"),
+        default="deepseek",
+        help="Model API: DeepSeek's own (default) or the same model id through OpenRouter.",
+    )
+    hronaut.add_argument(
+        "--upstream-provider",
+        metavar="SLUG",
+        help="With --provider openrouter: the one upstream host to use, e.g. deepinfra/fp8.",
+    )
+    hronaut.add_argument(
+        "--trace-output",
+        type=Path,
+        help="Write the sanitized adapter-owned MCP calls; this file is not a BAR report.",
+    )
+    hronaut.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Check the connection, page binding and observer without a model or API key.",
+    )
+    hronaut.set_defaults(handler=_hronaut_mcp_deepseek)
 
     serve = subparsers.add_parser("serve", help="Serve fixtures for manual inspection.")
     serve.add_argument("--port", type=int, default=8765)
@@ -451,6 +598,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--runs must be at least 1")
     if getattr(args, "max_steps", 1) < 1:
         parser.error("--max-steps must be at least 1")
+    if getattr(args, "time_limit", 1) <= 0:
+        parser.error("--time-limit must be positive")
     if args.command == "calibrate" and args.variant is not None:
         required_variants = {"clean", "popup-overlay"}
         if not required_variants.issubset(args.variant):

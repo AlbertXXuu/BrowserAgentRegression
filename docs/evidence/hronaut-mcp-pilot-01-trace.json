@@ -1,0 +1,1269 @@
+{
+  "artifact": "hronaut-mcp-attempt-trace",
+  "note": "Sanitized adapter-owned MCP calls. This is not a BAR evidence report.",
+  "mcp": {
+    "protocol_version": "2025-11-25",
+    "server_name": "hronaut",
+    "server_version": "3.14.33",
+    "client": "mcp 2.3.0 (Python SDK, Streamable HTTP)",
+    "authenticated": false
+  },
+  "browser": "hronaut/3.14.33 Chrome/156.0.8078.96 Electron/45.3.0",
+  "model_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_snapshot",
+        "description": "Read the current page as compact text with element refs such as e1.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_click",
+        "description": "Click one element by snapshot ref or CSS selector.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string"
+            },
+            "selector": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_type",
+        "description": "Type text into one field by snapshot ref or CSS selector.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "submit": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_fill_form",
+        "description": "Fill several form fields in one call.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "fields": {
+              "minItems": 1,
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string"
+                  },
+                  "selector": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "string",
+                      "boolean"
+                    ]
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            }
+          },
+          "required": [
+            "fields"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_select",
+        "description": "Select one option of a select element by value or label.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_wait",
+        "description": "Wait for an element state or for visible text.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "description": "CSS selector to wait for. Cannot be combined with ref, text, or textGone.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "state": {
+              "description": "Element state to wait for. Defaults to visible when ref or selector is provided.",
+              "type": "string",
+              "enum": [
+                "attached",
+                "detached",
+                "visible",
+                "hidden"
+              ]
+            },
+            "text": {
+              "description": "Wait until this text, or any of up to 20 candidate texts, is visible in the rendered page. Cannot be combined with textGone.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                }
+              ]
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "model_tool_schema_sha256": "44051cfb98b8c9b483ec5b1f1bb2ef03e123f0e82d2b61a82b7b098b533cf118",
+  "upstream_tools": {
+    "browser_workspaces": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "action": {
+            "default": "list",
+            "description": "Use list to discover forkOnly sources even when direct access is disabled; create a fresh task workspace before page tools. Create and resume claim exclusive write ownership. Use ownership-status to inspect it, claim-ownership after fresh inspection to recover it, and release-ownership for handoff. Use resume only after reconnecting, with the private resumeKey returned by create or archive operations.",
+            "type": "string",
+            "enum": [
+              "list",
+              "list-fork-sources",
+              "create",
+              "resume",
+              "update",
+              "rename",
+              "close",
+              "list-origins",
+              "ownership-status",
+              "claim-ownership",
+              "release-ownership"
+            ]
+          },
+          "workspaceId": {
+            "description": "Stable UUIDv7 id returned by your own create call or by reopening your own archive. Pass this created workspace id to page tools. A rename changes only the human name, never this ID.",
+            "type": "string"
+          },
+          "resumeKey": {
+            "description": "Private resume key returned when this workspace was created, archived, resumed, or reopened, or given to you by the person who copied it from Hronaut. Required only for resume. Never share it with another client or website.",
+            "type": "string",
+            "pattern": "^hrw1_[A-Za-z0-9_-]{43}$"
+          },
+          "name": {
+            "description": "Human-readable workspace name for create, update, or rename.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "description": {
+            "description": "Durable workspace purpose and context. Describe why it exists, current work, and what useful browser state it stores. Returned by list and resume.",
+            "type": "string",
+            "maxLength": 1000
+          },
+          "color": {
+            "description": "Visible workspace color for create or update.",
+            "type": "string",
+            "enum": [
+              "gray",
+              "blue",
+              "cyan",
+              "green",
+              "yellow",
+              "orange",
+              "red",
+              "pink",
+              "purple"
+            ]
+          },
+          "sourceWorkspaceId": {
+            "description": "Required with storage=fork-workspace. Choose a forkOnly ID from list or any active or archived ID from list-fork-sources, including sources with direct agent access disabled. Forking never authorizes access to the source.",
+            "type": "string"
+          },
+          "storage": {
+            "description": "Required choice for an explicit create workflow: scratch (the default when omitted) starts from a clean isolated profile. fork-workspace copies reusable cookies and localStorage from sourceWorkspaceId into a fresh isolated workspace, inheriting its navigation restrictions. Forks do not copy source tabs. Source direct access may be disabled; the new agent workspace permits direct access. No fork authorizes browsing the original workspace.",
+            "type": "string",
+            "enum": [
+              "scratch",
+              "fork-workspace"
+            ]
+          },
+          "origins": {
+            "description": "Optional HTTP(S) origins whose cookies and localStorage are copied during fork-workspace. Omit to copy all available cookies and known localStorage from the selected source.",
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "contextClass": {
+            "default": "standard",
+            "description": "Use public-observer only for a clean, origin-scoped, read-only independent observation workspace.",
+            "type": "string",
+            "enum": [
+              "standard",
+              "public-observer"
+            ]
+          },
+          "observerOrigin": {
+            "description": "Required with contextClass=public-observer. The clean observer workspace is restricted to this HTTP(S) origin; paths, query values, and fragments are discarded.",
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description_sha256": "c9ae9d4f10beb8f1afdea4060c3229ef69496c1154ed641e8ae968bbc4aaff4c"
+    },
+    "browser_new_tab": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "url": {
+            "type": "string"
+          },
+          "label": {
+            "description": "Optional authored task label, at most 100 Unicode code points after trim/NFC. Not verified page identity. Creation reports label persistence separately.",
+            "type": "string",
+            "maxLength": 1024
+          },
+          "active": {
+            "description": "Select the new tab within the agent workspace without taking the view: Follow agents may show it once you work in it, unless the person is busy; browser_show makes it visible.",
+            "type": "boolean"
+          },
+          "zoomIsolated": {
+            "description": "Give the new tab its own page zoom, starting at 100%, instead of sharing zoom with same-origin tabs. Set only at creation; it cannot be switched later.",
+            "type": "boolean"
+          },
+          "defaultFontSize": {
+            "description": "Browser default (standard) font size in CSS px for this tab, 9–72; the browser default is 16. Changes text sized by the browser default and em/rem media queries, unlike page zoom or OS text scale. Set only at creation; open another tab for another size.",
+            "type": "integer",
+            "minimum": 9,
+            "maximum": 72
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description_sha256": "3b1f4121e683f06b03cb29a03c1613070850cd80fb328b613335d6203874d4a5"
+    },
+    "browser_tabs": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "search": {
+            "description": "Opt in to compact discovery of live HTTP(S) tabs. Addresses omit credentials, fragments and recognized secret query values. Only current-document titles confirmed by explicit native title events are included; unverified and URL fallback titles are empty. Title/address projections are bounded; counts cover projected fields only. Omit search to keep the existing full tab-state response.",
+            "type": "object",
+            "properties": {
+              "query": {
+                "description": "Literal, case-insensitive whitespace-separated terms; each term must match the same tab’s projected title or address. An empty query lists eligible tabs.",
+                "type": "string",
+                "maxLength": 256
+              },
+              "limit": {
+                "description": "Maximum compact results; defaults to 10. Output may stop earlier at its character bound.",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "description_sha256": "86857c4a3387804484bb60911c8ccd2cff8e0895b702437869ba0858d62fca04"
+    },
+    "browser_evaluate": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "script": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "dialogAction": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "dismiss"
+            ]
+          },
+          "timeoutMs": {
+            "default": 30000,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 300000
+          }
+        },
+        "required": [
+          "workspaceId",
+          "script"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description_sha256": "f8fa55b2108dc7b4253fc1e02eb7281f89f0344efe5a46babdfe057fc49df91d"
+    },
+    "browser_snapshot": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "action": {
+            "default": "capture",
+            "type": "string",
+            "enum": [
+              "capture",
+              "set-baseline",
+              "delta",
+              "clear-baseline",
+              "assess-quality"
+            ]
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "maxChars": {
+            "description": "Bounded snapshot size for capture or set-baseline.",
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 100000
+          },
+          "frameSelector": {
+            "description": "Unique directly embedded same-origin HTTP(S) iframe; capture only, no refs or context switch. Unsupported history is unavailable.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "rootSelector": {
+            "description": "Unique CSS component root for capture or set-baseline. Delta reuses the stored root; an explicit different selector is rejected. No whole-page fallback.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "shadowHostSelector": {
+            "description": "Unique top-level element with an open shadow root, such as a web component; capture only. Read-only text of its shadow content, nested open roots and slotted content, with no refs. Not with root, frame, baseline, delta or quality options.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "baselineId": {
+            "description": "Opaque baseline handle required by delta and optional for clear-baseline.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "maxOutputChars": {
+            "description": "Maximum compact JSON characters returned by delta.",
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 50000
+          },
+          "advanceBaseline": {
+            "description": "Advance a complete, untruncated baseline after delta; defaults to true.",
+            "type": "boolean"
+          },
+          "expectedOrigin": {
+            "description": "HTTP(S) origin or URL the resolved page must match during assess-quality.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "expectedText": {
+            "description": "Private required page text checked during assess-quality and never returned.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expectedSelector": {
+            "description": "Private required visible CSS selector checked during assess-quality and never returned.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "description_sha256": "a294414e18e2f75aee1aaec91085a0f5c0ac36023518fe804f60c3b6301f4e63"
+    },
+    "browser_click": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "selector": {
+            "type": "string"
+          },
+          "x": {
+            "description": "Viewport-relative CSS x coordinate. Provide together with y and without ref or selector.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "y": {
+            "description": "Viewport-relative CSS y coordinate. Provide together with x and without ref or selector.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "button": {
+            "description": "Omit for the existing left click. Right requires native=true, an explicit tabId and one ref or selector, on an already active visible awake locked Linux page with default geometry. Opens a page menu only; selection is separate. No automatic replay.",
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          },
+          "doubleClick": {
+            "description": "Dispatch two native pointer clicks and a dblclick event instead of one native pointer click.",
+            "type": "boolean"
+          },
+          "native": {
+            "description": "For a single ref or selector click, dispatch trusted native pointer and mouse events. Use only when the control does not respond to the default exact-element click.",
+            "type": "boolean"
+          },
+          "modifiers": {
+            "description": "Keys for this one click, such as Shift to extend a selection or ControlOrMeta to add to it or open a link in a background tab. ControlOrMeta is Meta on macOS and Control elsewhere; Control is rejected on macOS, where it opens a context menu. Requires native=true and one ref or selector; coordinates, doubleClick, button right and dialogs reject. The page sees the keys only on this click's mouse events; no key events are sent.",
+            "minItems": 1,
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Shift",
+                "Control",
+                "Meta",
+                "ControlOrMeta"
+              ]
+            }
+          },
+          "dialogAction": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "dismiss"
+            ]
+          },
+          "promptText": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "postcondition": {
+            "description": "After one click, perform bounded read-only checks with backoff. Requires an active action-receipt run; Hronaut never repeats the click.",
+            "type": "object",
+            "properties": {
+              "expectedOrigin": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Exact HTTP(S) origin expected after the click."
+              },
+              "accountSelector": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Unique selector whose bounded text identifies the expected account."
+              },
+              "expectedAccount": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "description": "Exact expected account-marker text. Kept local and excluded from receipts."
+              },
+              "stateSelector": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Unique selector for the action-relevant state."
+              },
+              "expectedText": {
+                "type": "string",
+                "maxLength": 512,
+                "description": "Exact expected state text. Kept local and excluded from receipts."
+              },
+              "timeoutMs": {
+                "default": 10000,
+                "type": "integer",
+                "minimum": 250,
+                "maximum": 30000
+              },
+              "maxAttempts": {
+                "default": 4,
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "initialDelayMs": {
+                "default": 250,
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 5000
+              }
+            },
+            "required": [
+              "expectedOrigin",
+              "accountSelector",
+              "expectedAccount",
+              "stateSelector",
+              "expectedText"
+            ],
+            "additionalProperties": false
+          },
+          "reconciliation": {
+            "description": "Repeat a bounded pre-write lookup immediately before dispatch. Must describe the same target and desired state as postcondition; a missing, stale, ambiguous, or already-satisfied target prevents the click.",
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "update",
+                  "upsert"
+                ]
+              },
+              "expectedOrigin": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Exact HTTP(S) origin for the authoritative visible record."
+              },
+              "accountSelector": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Unique selector whose bounded text identifies the expected account."
+              },
+              "expectedAccount": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "description": "Exact account marker. Used transiently and excluded from receipts."
+              },
+              "stateSelector": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Unique selector for the target record state."
+              },
+              "expectedText": {
+                "type": "string",
+                "maxLength": 512,
+                "description": "Exact desired target text. Used transiently and excluded from receipts."
+              },
+              "expectedCurrentText": {
+                "description": "Exact pre-write target text. Required for update and rechecked at dispatch.",
+                "type": "string",
+                "maxLength": 512
+              },
+              "logicalItemKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "targetIdentity": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "sourceRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "mode",
+              "expectedOrigin",
+              "accountSelector",
+              "expectedAccount",
+              "stateSelector",
+              "expectedText",
+              "logicalItemKey",
+              "targetIdentity",
+              "sourceRevision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "workspaceId"
+        ],
+        "additionalProperties": {}
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description_sha256": "8974dd534e2080edc759b1f941e0637437b00c0ad5fef1b352724f53efc193bc"
+    },
+    "browser_type": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "selector": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "submit": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "text"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description_sha256": "29cfacea2353480ba47511d459b1d61a7c030dc21e448279cfbc61789b44262f"
+    },
+    "browser_fill_form": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "fields": {
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ref": {
+                  "type": "string"
+                },
+                "selector": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "boolean"
+                  ]
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "required": [
+          "workspaceId",
+          "fields"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description_sha256": "24a0238d44961acb74e80ceaa58aae526f888aefffc7963ac4484b1fab86c5fd"
+    },
+    "browser_select": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "selector": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "values": {
+            "description": "Semantic select[multiple] replacement by exact values; empty clears. No keyboard or pointer gestures.",
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1024
+            }
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description_sha256": "c20e7737843fbd88be18c4e908edbfe3b6d571e635a81bc8798410b7ea306212"
+    },
+    "browser_wait": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Stable UUIDv7 id returned by your own browser_workspaces create call or by reopening your own archive. After reconnecting, resume that workspace with its private resume key before using page tools."
+          },
+          "reviewId": {
+            "description": "Approved consequential-review ID. Supply it together with reviewRevision only for the exact proposed action.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "reviewRevision": {
+            "description": "Current approved consequential-review revision. The pair is single-use and bound to this exact normalized call.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tabId": {
+            "type": "string"
+          },
+          "text": {
+            "description": "Wait until this text, or any of up to 20 candidate texts, is visible in the rendered page. Cannot be combined with textGone.",
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              {
+                "minItems": 1,
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                }
+              }
+            ]
+          },
+          "textGone": {
+            "description": "Wait until this exact text is absent from the rendered page. Cannot be combined with text.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "ref": {
+            "description": "Snapshot element ref to wait for. Cannot be combined with selector, text, or textGone.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "selector": {
+            "description": "CSS selector to wait for. Cannot be combined with ref, text, or textGone.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "state": {
+            "description": "Element state to wait for. Defaults to visible when ref or selector is provided.",
+            "type": "string",
+            "enum": [
+              "attached",
+              "detached",
+              "visible",
+              "hidden"
+            ]
+          },
+          "urlPattern": {
+            "description": "Full page URL wildcard pattern to wait for, including same-document route changes. Cannot be combined with text or an element target.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60000
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "description_sha256": "a55d9d3829d51196335c99b944972db1d00633cf9578339b0b34e4948f2d4dbf"
+    }
+  },
+  "attempts": [
+    {
+      "task_id": "preferences.notifications.v1",
+      "variant": "clean",
+      "fixture_url": "http://127.0.0.1:38929/preferences.html?variant=clean",
+      "errors": {},
+      "events": [
+        {
+          "step": "workspace.create",
+          "call": {
+            "action": "create",
+            "name": "bar preferences.notifications.v1 clean 1",
+            "storage": "scratch"
+          },
+          "result": {
+            "id": "01a1ea4b-878f-720b-8b67-e00044de75a2",
+            "activeTabId": null,
+            "tabCount": 0,
+            "contextClass": "standard",
+            "writeLease": "owned",
+            "resumeKey": "<redacted>"
+          }
+        },
+        {
+          "step": "tab.create",
+          "call": {
+            "workspaceId": "01a1ea4b-878f-720b-8b67-e00044de75a2",
+            "url": "http://127.0.0.1:38929/preferences.html?variant=clean",
+            "active": true
+          },
+          "result": {
+            "tabs": [
+              {
+                "id": "01a1ea4b-8798-7f5a-aa4b-83faa337e959",
+                "url": "http://127.0.0.1:38929/preferences.html?variant=clean",
+                "loading": true,
+                "active": true,
+                "workspaceId": "01a1ea4b-878f-720b-8b67-e00044de75a2",
+                "documentGeneration": 0
+              }
+            ]
+          }
+        },
+        {
+          "step": "document.bind",
+          "result": {
+            "href": "http://127.0.0.1:38929/preferences.html?variant=clean",
+            "readyState": "complete",
+            "marker": "b9d46effcfe842780c24c83cde9429f6",
+            "timeOrigin": 1794932180904
+          }
+        },
+        {
+          "step": "negative-control",
+          "tab": {
+            "id": "01a1ea4b-8798-7f5a-aa4b-83faa337e959",
+            "url": "http://127.0.0.1:38929/preferences.html?variant=clean",
+            "loading": false,
+            "active": true,
+            "workspaceId": "01a1ea4b-878f-720b-8b67-e00044de75a2",
+            "documentGeneration": 1
+          },
+          "result": {
+            "checkpoints": {
+              "preferences.product_updates.disabled": false,
+              "preferences.saved": false,
+              "preferences.security_alerts.enabled": false
+            },
+            "href": "http://127.0.0.1:38929/preferences.html?variant=clean",
+            "kind": "bar-hronaut-observation/1",
+            "marker": "b9d46effcfe842780c24c83cde9429f6",
+            "readyState": "complete",
+            "requiredNodes": {
+              "#product-updates": 1,
+              "#security-alerts": 1,
+              "[role=\"status\"]": 1
+            },
+            "timeOrigin": 1794932180904
+          }
+        },
+        {
+          "step": "model.step",
+          "index": 1,
+          "tools": [
+            {
+              "tool": "browser_snapshot",
+              "arguments": {},
+              "is_error": false
+            }
+          ]
+        },
+        {
+          "step": "model.step",
+          "index": 2,
+          "tools": [
+            {
+              "tool": "browser_click",
+              "arguments": {
+                "ref": "e1"
+              },
+              "is_error": false
+            }
+          ]
+        },
+        {
+          "step": "model.step",
+          "index": 3,
+          "tools": [
+            {
+              "tool": "browser_click",
+              "arguments": {
+                "ref": "e2"
+              },
+              "is_error": false
+            }
+          ]
+        },
+        {
+          "step": "model.step",
+          "index": 4,
+          "tools": [
+            {
+              "tool": "browser_snapshot",
+              "arguments": {},
+              "is_error": false
+            }
+          ]
+        },
+        {
+          "step": "model.step",
+          "index": 5,
+          "tools": [
+            {
+              "tool": "browser_click",
+              "arguments": {
+                "ref": "e4"
+              },
+              "is_error": false
+            }
+          ]
+        },
+        {
+          "step": "model.step",
+          "index": 6,
+          "tools": [
+            {
+              "tool": "browser_snapshot",
+              "arguments": {},
+              "is_error": false
+            }
+          ]
+        },
+        {
+          "step": "model.step",
+          "index": 7,
+          "tools": []
+        },
+        {
+          "step": "model.stop",
+          "reason": "final_answer",
+          "quiescent": true
+        },
+        {
+          "step": "score",
+          "tab": {
+            "id": "01a1ea4b-8798-7f5a-aa4b-83faa337e959",
+            "url": "http://127.0.0.1:38929/preferences.html?variant=clean",
+            "loading": false,
+            "active": true,
+            "workspaceId": "01a1ea4b-878f-720b-8b67-e00044de75a2",
+            "documentGeneration": 1
+          },
+          "result": {
+            "checkpoints": {
+              "preferences.product_updates.disabled": true,
+              "preferences.saved": true,
+              "preferences.security_alerts.enabled": true
+            },
+            "href": "http://127.0.0.1:38929/preferences.html?variant=clean",
+            "kind": "bar-hronaut-observation/1",
+            "marker": "b9d46effcfe842780c24c83cde9429f6",
+            "readyState": "complete",
+            "requiredNodes": {
+              "#product-updates": 1,
+              "#security-alerts": 1,
+              "[role=\"status\"]": 1
+            },
+            "timeOrigin": 1794932180904
+          }
+        },
+        {
+          "step": "workspace.close",
+          "call": {
+            "action": "close",
+            "workspaceId": "01a1ea4b-878f-720b-8b67-e00044de75a2"
+          },
+          "result": {
+            "is_error": false,
+            "text": "[]"
+          }
+        }
+      ]
+    }
+  ]
+}

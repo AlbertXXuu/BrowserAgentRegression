@@ -2,6 +2,19 @@
 
 All notable changes are documented here. Releases use semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- Optional `hronaut-mcp-deepseek` command and `hronaut-mcp/<model>` driver: a repository-local
+  adapter that runs the DeepSeek model loop against a running Hronaut MCP browser and scores the
+  original fixture document independently before cleanup. `verify` accepts the new command only
+  with its own driver, `real-agent` evidence kind and a Hronaut run identity. Install with the
+  `hronaut` extra. Existing commands, schema, fixtures and evidence are unchanged.
+- `--provider openrouter --upstream-provider <slug>` for that command, recorded in the run
+  identity as a third-party route to the model; the default remains DeepSeek's own API.
+- One-attempt Hronaut MCP pilot evidence (`docs/evidence/hronaut-mcp-pilot-01.*`).
+
 ## [1.1.3] - 2026-10-24
 
 ### Fixed
