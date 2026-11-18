@@ -9,6 +9,11 @@ same live page. BAR's baseline commands below work today. Hronaut execution and 
 entry point require the contributor's connection details and a small adapter change; there is
 currently no `hronaut` CLI command. A successful pilot establishes integration feasibility.
 
+> **Status, 2026-11-17:** the named path now exists as the optional `hronaut-mcp-deepseek`
+> command. Sections 1–6 are kept as the original recipe and requirements;
+> [section 7](#7-implemented-adapter-hronaut-mcp-deepseek) describes the adapter that implements
+> them and how each requirement is covered.
+
 ## 1. Run the current BAR baseline
 
 Use a fresh clone so existing work is preserved. Use Python 3.11–3.13. The Issue #14 environment
@@ -213,6 +218,130 @@ Before an adapter exists, exact BAR/Hronaut revisions, sanitized launch/call ins
 connection/independent-observation output or a specific blocking error are enough. Once the named
 path exists, add one run's identity, report and verification output. Attach the synthetic baseline
 separately. A full benchmark run is not required to settle the integration seam.
+
+## 7. Implemented adapter: `hronaut-mcp-deepseek`
+
+[`hronaut_mcp.py`](../../src/browser_agent_regression/hronaut_mcp.py) connects to a running
+Hronaut desktop app over loopback Streamable HTTP MCP and keeps the model loop in BAR. It does not
+launch Hronaut. The first attempt is recorded in
+[`hronaut-mcp-pilot-01.md`](../evidence/hronaut-mcp-pilot-01.md). Named values:
+
+| Item | Value |
+| --- | --- |
+| CLI command and report `command` | `hronaut-mcp-deepseek` |
+| Driver | `hronaut-mcp/<model>`, bound by `validate_report()` to the identity's agent and model |
+| Run identity `agent` | `hronaut-mcp`; `validate_report()` also requires the negotiated MCP boundary, the provider-specific model route, the tool list and schema digest, and the execution limits |
+| Evidence kind | `real-agent` |
+
+### Run it
+
+```sh
+.venv/bin/python -m pip install -e ".[dev,hronaut]"
+
+# Key-free check of the connection, page binding and observer. Not a BAR report.
+.venv/bin/python -m browser_agent_regression hronaut-mcp-deepseek --preflight \
+  --task preferences.notifications.v1 --variant clean --trace-output runs/hronaut-preflight.json
+
+# One real attempt. Each attempt may make several paid DeepSeek requests.
+.venv/bin/python -m browser_agent_regression hronaut-mcp-deepseek \
+  --task preferences.notifications.v1 --variant clean --runs 1 \
+  --output runs/hronaut-pilot.json --trace-output runs/hronaut-pilot-trace.json
+.venv/bin/python -m browser_agent_regression verify --report runs/hronaut-pilot.json
+```
+
+The endpoint defaults to `http://127.0.0.1:47812/mcp`; `--mcp-url` accepts only an `http://`
+loopback address. If MCP authentication is enabled in Hronaut, set `HRONAUT_MCP_TOKEN_FILE` to the
+profile's `mcp-token` file (or `HRONAUT_MCP_TOKEN`); the credential is never taken from the command
+line or written to a report or trace. The DeepSeek key is resolved exactly as for `deepseek`.
+
+`--provider deepseek` (the default) calls DeepSeek's own API. `--provider openrouter
+--upstream-provider <slug>` requests the same model id through OpenRouter with
+`OPENROUTER_API_KEY`, restricted to that one upstream host with fallbacks off. OpenRouter serves
+these models from third-party hosts, some quantized, so the run identity records the route, the
+requested host and the host each response reported, and such a run is not the same serving stack
+as a `deepseek` run.
+Hronaut must show full URLs, including query strings, to MCP clients, because the adapter compares
+the tab's address with the exact fixture URL.
+
+### What one attempt does
+
+1. **Prepare.** Every declared attempt is registered before the first one is scheduled, with the
+   declared task, variant, driver and ordered false placeholder checkpoints. The report is saved
+   once before the first attempt and again after each terminal result, so an unwritable `--output`
+   stops the run before any paid request and an interrupted run keeps what it finished. Defaults:
+   `--max-steps 12` and at most 3 actions per step, as for `deepseek`, plus `--time-limit 300`
+   seconds.
+2. **Open and bind.** A new scratch workspace has no tab (`activeTabId: null`), so the adapter
+   creates the workspace, opens one tab at `FixtureServer.url(...)` with `browser_new_tab`, and
+   records both ids. Once the document is `complete` at that exact URL it defines a non-enumerable,
+   read-only nonce on `window` and records `performance.timeOrigin`. The fixture is otherwise
+   untouched.
+3. **Negative control.** The same observer that scores the attempt must read three false
+   checkpoints on the fresh page, or the attempt is retained as a setup failure and the model is
+   not called.
+4. **Execute.** The model receives the manifest goal with the same prompt constraints as the
+   Browser Use adapter and six page tools: `browser_snapshot`, `browser_click`, `browser_type`,
+   `browser_fill_form`, `browser_select` and `browser_wait`. Their schemas are projected from the
+   live `tools/list` response onto an explicit parameter allowlist; `workspaceId` and `tabId` are
+   injected by the adapter and rejected if the model supplies them. Navigation, tab and workspace
+   management and `browser_evaluate` are not exposed. A missing tool or parameter is a setup error.
+5. **Score.** When the loop ends the adapter calls `browser_tabs` and then `browser_evaluate` on
+   the recorded tab. `browser_evaluate` evaluates an expression, so the observer and the existing
+   `_CHECKPOINT_SCRIPTS[task_id]` function are both invoked explicitly. The result is accepted only
+   if the tab is still listed at the exact fixture URL, `location.href` equals it, the nonce and
+   time origin are those of the original document, every node the checkpoint script reads exists
+   exactly once, and `checkpoints` is an object with exactly the declared keys and boolean values.
+   A reload at the same URL loses the nonce and is refused. The model's messages are ignored.
+6. **Clean up.** Only after scoring, the adapter closes the workspace it created.
+
+Hronaut returns tool results as one text item; JSON values are pretty-printed with sorted keys, and
+some results add `structuredContent`. The adapter normalizes that wrapper once, parses the text as
+JSON, and restores the declared checkpoint order.
+
+### Failures that stay in the report
+
+Every declared attempt produces a record. `error` joins the stages that failed, in the order they
+happened, from `setup`, `agent`, `scoring`, `cancelled`, `cleanup` and `connection`, each bounded
+and redacted, so a cleanup error or a cancellation cannot replace or be replaced by an earlier one.
+Any error means `passed=False`, even with three true checkpoints.
+
+Each attempt also records `scored`. It is `true` only when an observation of the original page
+was accepted. An unscored attempt (`scored: false`) keeps its false placeholder checkpoints, has
+`first_failed_checkpoint: null` and an error, and adds nothing to the failure-checkpoint counts:
+it is a failed attempt, not an observed failure at the first checkpoint.
+
+| Situation | Recorded outcome |
+| --- | --- |
+| Model stops, hits `--max-steps`, or a tool returns a definite error | Page is scored; partial checkpoints are kept. |
+| Time limit reached during a model turn | `agent` error; the page is quiescent, so it is scored. |
+| A page action begins before the time limit and ends after it, on any step including the last | The action is awaited to a definite outcome, then `agent` error; the page is scored. |
+| Provider or model request fails | `agent` error; the page is scored. |
+| A dispatched page action times out, loses the transport, or reports `OUTCOME_UNKNOWN`/`TIMED_OUT` | `agent` error and `scoring: skipped`; the attempt is unscored. A dispatched action is never cancelled by the time limit. |
+| Tab gone, URL changed, document replaced, node missing, or invalid observation | `scoring` error; the attempt is unscored. No replacement page is scored. |
+| Workspace close fails | `cleanup` error; scored checkpoints are kept. |
+| MCP session cannot be opened or fails while closing | `setup` or `connection` error on that attempt; a setup failure is unscored. |
+| Run cancelled (Ctrl+C) during a model turn | `cancelled`; no page action is in flight, so the page is scored, then the workspace is closed. |
+| Run cancelled while a page action is in flight | `cancelled` and `scoring: skipped`; the attempt is unscored and the workspace is closed. |
+| Run cancelled during scoring or cleanup, also repeatedly | Scoring and the workspace close run to completion; `cancelled` is recorded next to the score and any `cleanup` error. |
+| Run cancelled before an attempt starts | That attempt is kept as `cancelled`, unscored. |
+
+A cancelled run saves every declared attempt, then exits with `130`; the saved report still passes
+`verify`. Where the event loop supports signal handlers (POSIX), a repeated Ctrl+C is absorbed
+until the current attempt is scored, cleaned up and saved; each adapter call is still bounded by
+its 60-second timeout. Elsewhere a second Ctrl+C is a hard interrupt that can cut cleanup short.
+In that case, and after a forced process kill, the report saved after the previous attempt is
+still on disk, with the unfinished attempts recorded as `not completed`.
+
+If Hronaut cannot be reached before the first attempt there is no negotiated identity to record,
+so the command exits with `2` and writes no report. Reconnect recovery is out of scope: a
+disconnect fails the attempt.
+
+`--trace-output` writes the sanitized adapter-owned calls and results (negotiated MCP and server
+version, the tool schemas, workspace and tab creation, binding, negative control, scoring and
+close). Resume keys are redacted and local profile paths are not copied. The trace and the
+`--preflight` artifact (`"artifact": "seam-preflight"`) are supporting material, not BAR reports.
+The report is always written first. If the trace cannot be written, the report is kept and the
+command exits with `2`.
 
 ## References
 

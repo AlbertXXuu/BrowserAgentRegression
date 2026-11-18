@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "protocol_id": "browser-agent-regression-controlled-ui-v1",
+  "tool_version": "1.1.3",
+  "evidence_kind": "real-agent",
+  "created_at": "2026-11-17T16:16:43.946347+00:00",
+  "task_ids": [
+    "preferences.notifications.v1"
+  ],
+  "command": "hronaut-mcp-deepseek",
+  "environment": {
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.39",
+    "playwright": "1.65.2",
+    "browser": "hronaut/3.14.33 Chrome/156.0.8078.96 Electron/45.3.0"
+  },
+  "fixture_sha256": {
+    "preferences.html": "68dc9e973b761f9c1b0c68f016e1751d3fdf0cebecd7650058fbb60f997670ce",
+    "preferences.json": "cd1badbb9d7fcd1760fa4a4cd1db92dcb3a72cab9410422c2e1ca200a47d076c"
+  },
+  "configuration": {
+    "runs_per_driver_task_variant": 1,
+    "tasks": [
+      "preferences.notifications.v1"
+    ],
+    "variants": [
+      "clean"
+    ],
+    "run_identity": {
+      "agent": "hronaut-mcp",
+      "agent_version": "3.14.33",
+      "mcp_server_name": "hronaut",
+      "mcp_server_version": "3.14.33",
+      "mcp_protocol_version": "2025-11-25",
+      "mcp_client": "mcp (official Python SDK)",
+      "mcp_client_version": "2.3.0",
+      "mcp_transport": "Streamable HTTP on loopback",
+      "mcp_authentication": "none; the server accepted an unauthenticated loopback client",
+      "model": "deepseek-v4-flash",
+      "provider": "openrouter",
+      "model_route": "deepseek/deepseek-v4-flash",
+      "model_transport": "OpenRouter chat completions with function calling, tool_choice auto; a third-party host of the model, not DeepSeek's own API",
+      "upstream_provider_requested": "deepinfra/fp8",
+      "upstream_provider_fallbacks": false,
+      "upstream_provider_observed": [
+        "DeepInfra"
+      ],
+      "thinking": "disabled (reasoning effort none)",
+      "model_client_version": "3.52.0",
+      "temperature": 0.0,
+      "max_steps": 12,
+      "max_actions_per_step": 3,
+      "time_limit_seconds": 300.0,
+      "tool_call_timeout_seconds": 60.0,
+      "prompt_strategy": "manifest goal with current-tab and visible-confirmation constraints",
+      "tools": [
+        "browser_snapshot",
+        "browser_click",
+        "browser_type",
+        "browser_fill_form",
+        "browser_select",
+        "browser_wait"
+      ],
+      "tool_schema_sha256": "44051cfb98b8c9b483ec5b1f1bb2ef03e123f0e82d2b61a82b7b098b533cf118",
+      "browser_owner": "Hronaut desktop app, already running; not launched by BAR",
+      "page_binding": "adapter-created scratch workspace and tab; workspaceId and tabId injected by the adapter",
+      "document_identity": "adapter nonce on the original document, performance.timeOrigin and the exact fixture URL",
+      "scoring": "adapter-owned browser_evaluate on the recorded tab before cleanup; model output ignored; skipped while a dispatched action has an unknown outcome",
+      "reset_policy": "fresh scratch workspace and tab per attempt; negative control before the first model turn",
+      "cleanup": "workspace closed after scoring; cleanup errors are retained",
+      "reconnect": "out of scope; a disconnect fails the attempt",
+      "credential_input": "environment or hidden interactive prompt"
+    }
+  },
+  "summaries": [
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "hronaut-mcp/deepseek-v4-flash",
+      "variant": "clean",
+      "runs": 1,
+      "successes": 1,
+      "success_rate": 1.0,
+      "failure_checkpoints": {}
+    }
+  ],
+  "regressions": [],
+  "attempts": [
+    {
+      "task_id": "preferences.notifications.v1",
+      "driver": "hronaut-mcp/deepseek-v4-flash",
+      "variant": "clean",
+      "passed": true,
+      "duration_ms": 22838.084,
+      "checkpoints": {
+        "preferences.product_updates.disabled": true,
+        "preferences.security_alerts.enabled": true,
+        "preferences.saved": true
+      },
+      "first_failed_checkpoint": null,
+      "error": null
+    }
+  ]
+}

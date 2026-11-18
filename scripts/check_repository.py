@@ -42,6 +42,7 @@ EVIDENCE_TO_VALIDATE = (
     "docs/evidence/phase0-slice-03-oracle.json",
     "docs/evidence/phase0-slice-03-calibration.json",
     "docs/evidence/phase0-deepseek-gate-c-02.json",
+    "docs/evidence/hronaut-mcp-pilot-01.json",
 )
 FORBIDDEN_PARTS = {
     ".playwright-cli",

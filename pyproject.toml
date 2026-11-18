@@ -39,6 +39,10 @@ dev = [
 agent = [
   "browser-use[core]>=0.13.7,<0.14",
 ]
+hronaut = [
+  "mcp>=2.3,<3",
+  "openai>=1.99,<4",
+]
 
 [project.scripts]
 browser-agent-regression = "browser_agent_regression.cli:main"

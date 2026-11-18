@@ -28,6 +28,9 @@ dashboard.
 | `phase0-deepseek-smoke-04.md` | Interpretation of the checkout smoke run | Provider compatibility restored; remaining Agent-output instability documented |
 | `phase0-deepseek-gate-c-02.json` | Corrected authenticated three-task run on revision `b817b68` | 3/3 tasks and 9/9 independent checkpoints pass |
 | `phase0-deepseek-gate-c-02.md` | Gate C result and limitation record | Gate C passes; transient model-output instability remains visible |
+| `hronaut-mcp-pilot-01.json` | One Hronaut MCP + `deepseek-v4-flash` attempt on `preferences/clean`, model reached through OpenRouter | 1/1; three independent checkpoints pass; integration feasibility only |
+| `hronaut-mcp-pilot-01-trace.json` | Sanitized adapter-owned MCP calls of that attempt; not a BAR report | negotiated versions, tool schemas, tab creation, document marker, scoring and close |
+| `hronaut-mcp-pilot-01.md` | Result, model-route caveat and limits of the Hronaut pilot | one run; not comparable with the Browser Use runs |
 
 Slice 01 uses evidence schema `0.1`. Slices 02 and 03 use schema `0.2`, adding task identity
 to attempts, summaries, regressions, and configuration. All files are labelled
