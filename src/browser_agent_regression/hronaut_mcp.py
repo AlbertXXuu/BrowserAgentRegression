@@ -14,14 +14,14 @@ import json
 import os
 import re
 import secrets
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass, field
 from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
 from time import monotonic, perf_counter
-from typing import Any, Protocol, cast
+from typing import Any, NamedTuple, Protocol, TypeVar, cast
 from urllib.parse import urlsplit
 
 from browser_agent_regression import __version__
@@ -56,6 +56,7 @@ _BIND_POLL_SECONDS = 0.2
 _MODEL_RESULT_CHARS = 6_000
 _ERROR_CHARS = 500
 _REDACTED = "<redacted>"
+_T = TypeVar("_T")
 
 # Nodes each checkpoint script reads. All of them exist in the initial fixture
 # document (some hidden), so a missing node is a scoring error, never "false".
@@ -193,10 +194,17 @@ class _AttemptRecord:
     events: list[dict[str, Any]] = field(default_factory=list)
     secrets: list[str] = field(default_factory=list)
     browser: str | None = None
+    # True only once an observation of the original page was accepted as the score.
+    scored: bool = False
+    cancelled: bool = False
 
     def fail(self, stage: str, error: BaseException | str) -> None:
         message = _bounded_message(error, secrets=tuple(self.secrets)) or type(error).__name__
         self.errors.setdefault(stage, message)
+
+    def cancel(self, during: str) -> None:
+        self.cancelled = True
+        self.errors.setdefault("cancelled", f"the run was cancelled during {during}")
 
     def event(self, step: str, **details: Any) -> None:
         self.events.append({"step": step, **details})
@@ -399,6 +407,36 @@ def validate_observation(
     if any(type(result[checkpoint]) is not bool for checkpoint in expected):
         raise ValueError("checkpoint values must be booleans")
     return {checkpoint: result[checkpoint] for checkpoint in expected}
+
+
+def _absorb_cancellation(record: _AttemptRecord, during: str) -> None:
+    """Record a cancellation that the attempt finishes through instead of obeying at once.
+
+    The attempt still reaches a terminal result, with its score, the cancellation
+    and cleanup recorded separately. The matrix re-raises once that result is saved.
+    """
+
+    record.cancel(during)
+    task = asyncio.current_task()
+    if task is not None:
+        task.uncancel()
+
+
+async def _uninterrupted(
+    record: _AttemptRecord, during: str, work: Coroutine[Any, Any, _T]
+) -> _T:
+    """Finish adapter-owned scoring or cleanup even if the run is cancelled meanwhile."""
+
+    task = asyncio.ensure_future(work)
+    while True:
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            if task.cancelled():
+                raise  # The work itself was cancelled, for example by event-loop shutdown.
+            _absorb_cancellation(record, during)
+            if task.done():
+                return task.result()
 
 
 async def _adapter_call(
@@ -649,9 +687,11 @@ async def _model_loop(
 ) -> _LoopOutcome:
     """Run the model until it stops, without cancelling a dispatched action.
 
-    The wall-clock limit is enforced between actions and during model turns.
-    A page action that was dispatched but did not return a definite result
-    leaves the page non-quiescent, and the caller must not score it.
+    The wall-clock limit is enforced during model turns, before each action and
+    after each step, including the last permitted one. A page action that was
+    dispatched but did not return a definite result, because of a transport
+    failure or a cancellation, leaves the page non-quiescent, and the caller
+    must not score it.
     """
 
     messages = _prompt(record.task_id)
@@ -665,6 +705,11 @@ async def _model_loop(
             reply = await asyncio.wait_for(model.complete(messages, tools), timeout=remaining)
         except TimeoutError:
             outcome.stop_reason = "time_limit"
+            return outcome
+        except asyncio.CancelledError:
+            # No page action is in flight during a model turn, so the page stays scorable.
+            _absorb_cancellation(record, "a model turn")
+            outcome.stop_reason = "cancelled"
             return outcome
         except Exception as exc:
             outcome.stop_reason = "model_error"
@@ -710,6 +755,13 @@ async def _model_loop(
             }
             try:
                 result = await session.call_tool(name, bound, timeout=TOOL_CALL_TIMEOUT_SECONDS)
+            except asyncio.CancelledError:
+                _absorb_cancellation(record, name)
+                executed.append({"tool": name, "arguments": arguments, "outcome": "unknown"})
+                record.event("model.step", index=step, tools=executed)
+                outcome.stop_reason = "cancelled"
+                outcome.quiescent = tool.read_only
+                return outcome
             except Exception as exc:
                 executed.append({"tool": name, "arguments": arguments, "outcome": "unknown"})
                 record.event("model.step", index=step, tools=executed)
@@ -743,7 +795,10 @@ async def _model_loop(
                 }
             )
         record.event("model.step", index=step, tools=executed)
-        if out_of_time:
+        # Every dispatched action has a definite outcome here. An action that began
+        # before the deadline and ended after it exceeds the limit on any step,
+        # including the last permitted one.
+        if out_of_time or monotonic() >= deadline:
             outcome.stop_reason = "time_limit"
             return outcome
     return outcome
@@ -803,9 +858,18 @@ async def _drive(
             )
     except (_StageError, HronautSetupError) as exc:
         record.fail("setup", exc)
+    except asyncio.CancelledError:
+        # The model loop and scoring absorb their own cancellations, so this is setup.
+        _absorb_cancellation(record, "setup")
+        if workspace_id is None:
+            record.fail(
+                "cleanup",
+                "skipped: workspace creation was interrupted, so there is no workspace id "
+                "to close",
+            )
     finally:
         if workspace_id is not None:
-            await _close_workspace(session, record, workspace_id)
+            await _cleanup(session, record, workspace_id)
 
 
 async def _control_and_score(
@@ -843,10 +907,17 @@ async def _control_and_score(
         record.fail("scoring", "skipped: a dispatched page action has an unknown outcome")
         return
     try:
-        record.checkpoints = await _observe(session, record, "score", **page)
+        record.checkpoints = await _uninterrupted(
+            record, "scoring", _observe(session, record, "score", **page)
+        )
     except _StageError as exc:
         record.fail("scoring", exc)
         return
+    except asyncio.CancelledError:
+        _absorb_cancellation(record, "scoring")
+        record.fail("scoring", "interrupted before an observation was accepted")
+        return
+    record.scored = True
     if not all(record.checkpoints.values()) and outcome.agent_errors:
         record.fail("agent", outcome.agent_errors[-1])
 
@@ -872,6 +943,27 @@ async def _close_workspace(session: ToolSession, record: _AttemptRecord, workspa
         record.fail("cleanup", f"workspace close failed: {closed.text}")
 
 
+async def _cleanup(session: ToolSession, record: _AttemptRecord, workspace_id: str) -> None:
+    """Close the workspace to completion; a cancellation is recorded, not obeyed."""
+
+    try:
+        await _uninterrupted(
+            record, "cleanup", _close_workspace(session, record, workspace_id)
+        )
+    except asyncio.CancelledError:
+        _absorb_cancellation(record, "cleanup")
+        record.fail("cleanup", "workspace close was interrupted; its outcome is unknown")
+
+
+class _Terminal(NamedTuple):
+    """The terminal result of one attempt; ``cancelled`` asks the matrix to stop."""
+
+    attempt: Attempt
+    trace: dict[str, Any]
+    browser: str | None
+    cancelled: bool
+
+
 async def _run_attempt(
     connect: Connector,
     model: ChatModel | None,
@@ -885,8 +977,8 @@ async def _run_attempt(
     max_steps: int,
     time_limit_seconds: float,
     known_secrets: tuple[str, ...],
-) -> tuple[Attempt, dict[str, Any], str | None]:
-    """Run one declared attempt and always return its record."""
+) -> _Terminal:
+    """Run one declared attempt and always return its record, also when cancelled."""
 
     record = _AttemptRecord(
         task_id=task_id,
@@ -910,29 +1002,40 @@ async def _run_attempt(
                 max_steps=max_steps,
                 time_limit_seconds=time_limit_seconds,
             )
+    except asyncio.CancelledError:
+        _absorb_cancellation(record, "the MCP connection")
     except Exception as exc:  # The report must retain connection and teardown failures.
         record.fail("connection" if entered else "setup", f"MCP connection: {_root_cause(exc)}")
     duration_ms = round((perf_counter() - started) * 1_000, 3)
-    first_failed = next((name for name, passed in record.checkpoints.items() if not passed), None)
+    # Without an accepted score the checkpoints are placeholders, not observed
+    # failures, so the attempt names no first-failure checkpoint.
+    first_failed = (
+        next((name for name, passed in record.checkpoints.items() if not passed), None)
+        if record.scored
+        else None
+    )
     error = record.error()
     attempt = Attempt(
         task_id=task_id,
         driver=driver,
         variant=variant,
-        passed=first_failed is None and error is None,
+        passed=record.scored and first_failed is None and error is None,
         duration_ms=duration_ms,
         checkpoints=record.checkpoints,
         first_failed_checkpoint=first_failed,
         error=error,
+        scored=record.scored,
     )
     trace = {
         "task_id": task_id,
         "variant": variant,
         "fixture_url": url,
+        "scored": record.scored,
+        "cancelled": record.cancelled,
         "errors": dict(record.errors),
         "events": record.events,
     }
-    return attempt, _redact(trace, tuple(record.secrets)), record.browser
+    return _Terminal(attempt, _redact(trace, tuple(record.secrets)), record.browser, record.cancelled)
 
 
 def _redact(value: Any, known_secrets: tuple[str, ...]) -> Any:
@@ -1150,6 +1253,73 @@ class DeepSeekChat:
         }
 
 
+Persist = Callable[[list[Attempt], dict[str, Any], str | None], None]
+
+
+@dataclass
+class _Cell:
+    """One declared attempt, registered before any attempt is scheduled."""
+
+    task_id: TaskId
+    variant: Variant
+    index: int
+    attempt: Attempt
+    trace: dict[str, Any]
+    terminal: bool = False
+
+    def close(self, attempt: Attempt, trace: dict[str, Any]) -> None:
+        self.attempt, self.trace, self.terminal = attempt, trace, True
+
+
+def _unstarted(
+    driver: Driver, task_id: TaskId, variant: Variant, stage: str, message: str
+) -> tuple[Attempt, dict[str, Any]]:
+    """A retained record for a declared attempt that produced no result of its own."""
+
+    attempt = Attempt(
+        task_id=task_id,
+        driver=driver,
+        variant=variant,
+        passed=False,
+        duration_ms=0.0,
+        checkpoints=dict.fromkeys(TASK_CHECKPOINTS[task_id], False),
+        first_failed_checkpoint=None,
+        error=f"{stage}: {message}",
+        scored=False,
+    )
+    trace = {
+        "task_id": task_id,
+        "variant": variant,
+        "fixture_url": None,
+        "scored": False,
+        "cancelled": stage == "cancelled",
+        "errors": {stage: message},
+        "events": [],
+    }
+    return attempt, trace
+
+
+async def _settle(worker: asyncio.Future[_Terminal]) -> bool:
+    """Wait until the attempt worker is terminal; return whether the run was cancelled.
+
+    The first cancellation is forwarded to the worker, which records it and still
+    scores a quiescent page and cleans up. Later ones are absorbed, so a repeated
+    cancellation cannot interrupt cleanup. The caller re-raises after saving.
+    """
+
+    cancelled = False
+    while not worker.done():
+        try:
+            await asyncio.shield(worker)
+        except asyncio.CancelledError:
+            if not cancelled and not worker.done():
+                worker.cancel()
+            cancelled = True
+        except Exception:  # Read below from the finished worker.
+            break
+    return cancelled
+
+
 async def run_hronaut_matrix(
     *,
     connect: Connector,
@@ -1162,50 +1332,128 @@ async def run_hronaut_matrix(
     max_steps: int,
     time_limit_seconds: float,
     known_secrets: tuple[str, ...] = (),
+    persist: Persist | None = None,
 ) -> tuple[list[Attempt], dict[str, Any], str | None]:
-    """Run every declared cell. ``model_client=None`` is the key-free preflight."""
+    """Run every declared cell. ``model_client=None`` is the key-free preflight.
+
+    Every declared attempt is registered first, and ``persist`` receives the whole
+    matrix before the first attempt and after each terminal result. A cancelled run
+    therefore keeps its finished attempts, records the interrupted and the unstarted
+    ones as cancelled, saves, and only then propagates the cancellation.
+    """
 
     driver = cast(Driver, f"{AGENT}/{model}")
-    attempts: list[Attempt] = []
-    traces: list[dict[str, Any]] = []
+    cells = [
+        _Cell(
+            task_id,
+            variant,
+            index,
+            *_unstarted(
+                driver,
+                task_id,
+                variant,
+                "not completed",
+                "the run ended before this attempt reached a terminal result",
+            ),
+        )
+        for task_id in tasks
+        for variant in variants
+        for index in range(1, runs + 1)
+    ]
     browser: str | None = None
+    cancelled = False
+    current = asyncio.current_task()
+
+    def snapshot() -> tuple[list[Attempt], dict[str, Any], str | None]:
+        trace_document = {
+            "artifact": "seam-preflight" if model_client is None else "hronaut-mcp-attempt-trace",
+            "note": "Sanitized adapter-owned MCP calls. This is not a BAR evidence report.",
+            "mcp": {
+                "protocol_version": identity.protocol_version,
+                "server_name": identity.server_name,
+                "server_version": identity.server_version,
+                "client": f"mcp {version('mcp')} (Python SDK, Streamable HTTP)",
+                "authenticated": identity.authenticated,
+            },
+            "browser": browser,
+            "cancelled": cancelled,
+            "model_tools": identity.model_tools,
+            "model_tool_schema_sha256": identity.tool_schema_sha256,
+            "upstream_tools": identity.upstream_tools,
+            "attempts": [cell.trace for cell in cells],
+        }
+        return [cell.attempt for cell in cells], _redact(trace_document, known_secrets), browser
+
+    def save() -> None:
+        if persist is not None:
+            persist(*snapshot())
+
+    save()  # The registered matrix: an unwritable output fails before any paid request.
     with FixtureServer() as server:
-        for task_id in tasks:
-            for variant in variants:
-                for index in range(1, runs + 1):
-                    attempt, trace, seen = await _run_attempt(
-                        connect,
-                        model_client,
-                        server,
-                        identity=identity,
-                        driver=driver,
-                        task_id=task_id,
-                        variant=variant,
-                        index=index,
-                        max_steps=max_steps,
-                        time_limit_seconds=time_limit_seconds,
-                        known_secrets=known_secrets,
+        for cell in cells:
+            worker = asyncio.ensure_future(
+                _run_attempt(
+                    connect,
+                    model_client,
+                    server,
+                    identity=identity,
+                    driver=driver,
+                    task_id=cell.task_id,
+                    variant=cell.variant,
+                    index=cell.index,
+                    max_steps=max_steps,
+                    time_limit_seconds=time_limit_seconds,
+                    known_secrets=known_secrets,
+                )
+            )
+            if current is not None and current.cancelling():
+                # Cancelled between attempts: stop this worker before it starts.
+                worker.cancel()
+            cancelled = await _settle(worker)
+            if worker.cancelled():
+                # Cancelled before the worker ran: only the registered record exists.
+                cell.close(
+                    *_unstarted(
+                        driver,
+                        cell.task_id,
+                        cell.variant,
+                        "cancelled",
+                        "the run was cancelled before this attempt started",
                     )
-                    attempts.append(attempt)
-                    traces.append(trace)
-                    browser = browser or seen
-    trace_document = {
-        "artifact": "seam-preflight" if model_client is None else "hronaut-mcp-attempt-trace",
-        "note": "Sanitized adapter-owned MCP calls. This is not a BAR evidence report.",
-        "mcp": {
-            "protocol_version": identity.protocol_version,
-            "server_name": identity.server_name,
-            "server_version": identity.server_version,
-            "client": f"mcp {version('mcp')} (Python SDK, Streamable HTTP)",
-            "authenticated": identity.authenticated,
-        },
-        "browser": browser,
-        "model_tools": identity.model_tools,
-        "model_tool_schema_sha256": identity.tool_schema_sha256,
-        "upstream_tools": identity.upstream_tools,
-        "attempts": traces,
-    }
-    return attempts, _redact(trace_document, known_secrets), browser
+                )
+            elif (unexpected := worker.exception()) is not None:
+                cell.close(
+                    *_unstarted(
+                        driver,
+                        cell.task_id,
+                        cell.variant,
+                        "adapter",
+                        f"unexpected failure: {_bounded_message(unexpected)[:200]}",
+                    )
+                )
+            else:
+                result = worker.result()
+                cell.close(result.attempt, result.trace)
+                browser = browser or result.browser
+                cancelled = cancelled or result.cancelled
+            if cancelled:
+                break
+            save()
+    if cancelled:
+        for cell in cells:
+            if not cell.terminal:
+                cell.close(
+                    *_unstarted(
+                        driver,
+                        cell.task_id,
+                        cell.variant,
+                        "cancelled",
+                        "the run was cancelled before this attempt started",
+                    )
+                )
+        save()
+        raise asyncio.CancelledError
+    return snapshot()
 
 
 _DEEPSEEK_ROUTE: dict[str, object] = {
@@ -1259,13 +1507,17 @@ def hronaut_run_identity(
         ),
         "scoring": (
             "adapter-owned browser_evaluate on the recorded tab before cleanup; model output "
-            "ignored; skipped while a dispatched action has an unknown outcome"
+            "ignored; skipped while a dispatched action has an unknown outcome; each attempt "
+            "records whether a score was accepted"
         ),
         "reset_policy": (
             "fresh scratch workspace and tab per attempt; negative control before the first "
             "model turn"
         ),
-        "cleanup": "workspace closed after scoring; cleanup errors are retained",
+        "cleanup": (
+            "workspace closed after scoring, also when the run is cancelled; cleanup errors "
+            "are retained"
+        ),
         "reconnect": "out of scope; a disconnect fails the attempt",
         "credential_input": "environment or hidden interactive prompt",
     }

@@ -6,8 +6,9 @@ import getpass
 import json
 import os
 import platform
+import signal
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -49,6 +50,16 @@ def _write_report(report: dict[str, object], output: Path | None) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(rendered, encoding="utf-8", newline="\n")
     print(f"Wrote {output}")
+
+
+def _save_json(document: dict[str, object], output: Path) -> None:
+    """Replace the file in one step, so an interrupted write keeps the previous snapshot."""
+
+    rendered = json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(f".{output.name}.tmp")
+    temporary.write_text(rendered, encoding="utf-8", newline="\n")
+    temporary.replace(output)
 
 
 def _run_matrix(
@@ -313,11 +324,40 @@ def _deepseek(args: argparse.Namespace) -> int:
     return 0 if all(attempt.passed for attempt in attempts) else 1
 
 
+def _run_until_saved(work: Coroutine[Any, Any, object]) -> None:
+    """Run the Hronaut matrix, turning every Ctrl+C into a cancellation of its task.
+
+    ``asyncio.run`` cancels on the first SIGINT but raises KeyboardInterrupt inside the
+    loop on the second, which would cut scoring and cleanup short. Where the loop
+    supports signal handlers, each SIGINT only cancels the task again; the matrix
+    absorbs the repeats until the current attempt is terminal and saved.
+    """
+
+    async def main() -> None:
+        loop, task = asyncio.get_running_loop(), asyncio.current_task()
+        assert task is not None
+        task.set_name("hronaut-mcp-run")
+        try:
+            loop.add_signal_handler(signal.SIGINT, task.cancel)
+        except (NotImplementedError, RuntimeError, ValueError):
+            # Windows event loops and non-main threads keep asyncio.run's own handling.
+            await work
+            return
+        try:
+            await work
+        finally:
+            loop.remove_signal_handler(signal.SIGINT)
+
+    asyncio.run(main())
+
+
 def _hronaut_mcp_deepseek(args: argparse.Namespace) -> int:
     from browser_agent_regression import hronaut_mcp
 
     tasks = _tasks(args.task)
     variants = _variants(args.variant or ["clean"])
+    saved: dict[str, Any] = {}
+    cancelled = False
     try:
         url = hronaut_mcp.require_loopback_url(args.mcp_url)
         bearer = hronaut_mcp.resolve_bearer_credential()
@@ -343,6 +383,50 @@ def _hronaut_mcp_deepseek(args: argparse.Namespace) -> int:
         identity = asyncio.run(
             hronaut_mcp.probe_identity(connect, authenticated=bearer is not None)
         )
+        describe = getattr(model_client, "describe", None)
+
+        def report_of(attempts: list[Attempt], browser_version: str | None) -> dict[str, Any]:
+            return build_report(
+                attempts,
+                command=hronaut_mcp.COMMAND,
+                runs=args.runs,
+                tasks=tasks,
+                variants=variants,
+                browser_version=browser_version,
+                evidence_kind="real-agent",
+                run_identity=hronaut_mcp.hronaut_run_identity(
+                    identity=identity,
+                    model=args.model,
+                    max_steps=args.max_steps,
+                    time_limit_seconds=args.time_limit,
+                    model_route=describe() if describe is not None else None,
+                ),
+            )
+
+        def persist(
+            attempts: list[Attempt], trace: dict[str, Any], browser_version: str | None
+        ) -> None:
+            """Save the whole matrix: the report first, then the optional trace.
+
+            A trace that cannot be written never costs the report; a report that
+            cannot be written stops the run.
+            """
+
+            saved.update(attempts=attempts, trace=trace, browser=browser_version)
+            if not args.preflight and args.output is not None:
+                try:
+                    _save_json(report_of(attempts, browser_version), args.output)
+                except OSError as exc:
+                    raise RuntimeError(
+                        f"the report could not be written to {args.output}: {exc.strerror or exc}"
+                    ) from exc
+            if args.trace_output is not None:
+                try:
+                    _save_json(trace, args.trace_output)
+                    saved["trace_error"] = None
+                except OSError as exc:
+                    saved["trace_error"] = exc.strerror or str(exc)
+
         attempt_count = len(tasks) * len(variants) * args.runs
         if args.preflight:
             print(f"Running the key-free Hronaut MCP preflight: {attempt_count} page check(s).")
@@ -357,26 +441,48 @@ def _hronaut_mcp_deepseek(args: argparse.Namespace) -> int:
                 f"attempt{'s' if attempt_count != 1 else ''}. "
                 "Each attempt may make multiple paid API requests."
             )
-        attempts, trace, browser_version = asyncio.run(
-            hronaut_mcp.run_hronaut_matrix(
-                connect=connect,
-                model_client=model_client,
-                model=args.model,
-                identity=identity,
-                tasks=tasks,
-                variants=variants,
-                runs=args.runs,
-                max_steps=args.max_steps,
-                time_limit_seconds=args.time_limit,
-                known_secrets=tuple(secret for secret in (api_key, bearer) if secret),
+        try:
+            _run_until_saved(
+                hronaut_mcp.run_hronaut_matrix(
+                    connect=connect,
+                    model_client=model_client,
+                    model=args.model,
+                    identity=identity,
+                    tasks=tasks,
+                    variants=variants,
+                    runs=args.runs,
+                    max_steps=args.max_steps,
+                    time_limit_seconds=args.time_limit,
+                    known_secrets=tuple(secret for secret in (api_key, bearer) if secret),
+                    persist=persist,
+                )
             )
-        )
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            # The matrix saved every declared attempt before it let the cancellation out.
+            # An interrupt that arrives after the last attempt finished cancelled nothing.
+            cancelled = bool(saved.get("trace", {"cancelled": True})["cancelled"])
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    except KeyboardInterrupt:
+        pass  # Interrupted before the matrix started: nothing is registered yet.
 
+    if "attempts" not in saved:
+        print("Cancelled before any attempt was registered; nothing was written.", file=sys.stderr)
+        return 130
+    attempts: list[Attempt] = saved["attempts"]
+    trace_error: str | None = saved.get("trace_error")
     if args.trace_output is not None:
-        _write_report(trace, args.trace_output)
+        if trace_error is None:
+            print(f"Wrote {args.trace_output}")
+        else:
+            print(
+                f"error: the trace could not be written to {args.trace_output}: {trace_error}",
+                file=sys.stderr,
+            )
+    interrupted = (
+        "Cancelled: every declared attempt is retained; unfinished ones are recorded as cancelled."
+    )
     if args.preflight:
         # A preflight has no agent and is never written as BAR evidence.
         failed = [attempt for attempt in attempts if attempt.error is not None]
@@ -387,34 +493,28 @@ def _hronaut_mcp_deepseek(args: argparse.Namespace) -> int:
             f"bound and observed all-false on {identity.server_name} "
             f"{identity.server_version} (MCP {identity.protocol_version})."
         )
-        return 2 if failed else 0
+        if cancelled:
+            print(interrupted, file=sys.stderr)
+            return 130
+        return 2 if failed or trace_error is not None else 0
 
-    describe = getattr(model_client, "describe", None)
-    report = build_report(
-        attempts,
-        command=hronaut_mcp.COMMAND,
-        runs=args.runs,
-        tasks=tasks,
-        variants=variants,
-        browser_version=browser_version,
-        evidence_kind="real-agent",
-        run_identity=hronaut_mcp.hronaut_run_identity(
-            identity=identity,
-            model=args.model,
-            max_steps=args.max_steps,
-            time_limit_seconds=args.time_limit,
-            model_route=describe() if describe is not None else None,
-        ),
-    )
-    _write_report(report, args.output)
+    if args.output is None:
+        _write_report(report_of(attempts, saved["browser"]), None)
+    else:
+        print(f"Wrote {args.output}")
     passed = sum(attempt.passed for attempt in attempts)
     print(f"Real-agent result: {passed}/{len(attempts)} attempts passed independent checks.")
     for attempt in attempts:
         if not attempt.passed:
-            print(
-                f"FAILED {attempt.task_id} [{attempt.variant}] first checkpoint: "
-                f"{attempt.first_failed_checkpoint or 'agent/runtime error'}"
+            where = attempt.first_failed_checkpoint or (
+                "not scored" if attempt.scored is False else "agent/runtime error"
             )
+            print(f"FAILED {attempt.task_id} [{attempt.variant}] first checkpoint: {where}")
+    if cancelled:
+        print(interrupted, file=sys.stderr)
+        return 130
+    if trace_error is not None:
+        return 2
     return 0 if all(attempt.passed for attempt in attempts) else 1
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -8,7 +9,7 @@ from importlib.metadata import version
 from pathlib import Path
 from platform import platform, python_version
 from time import perf_counter
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from playwright.sync_api import Browser, Page
 from playwright.sync_api import Error as PlaywrightError
@@ -85,6 +86,16 @@ class Attempt:
     checkpoints: dict[str, bool]
     first_failed_checkpoint: str | None
     error: str | None
+    # Recorded by adapters that can end an attempt without an accepted score.
+    # False means the checkpoints are placeholders, not observed failures.
+    scored: bool | None = None
+
+
+def _attempt_record(attempt: Attempt) -> dict[str, Any]:
+    record = asdict(attempt)
+    if attempt.scored is None:
+        del record["scored"]
+    return record
 
 
 def _bounded_error(error: Exception) -> str:
@@ -324,8 +335,100 @@ def build_report(
         "configuration": configuration,
         "summaries": summaries,
         "regressions": regressions,
-        "attempts": [asdict(attempt) for attempt in attempts],
+        "attempts": [_attempt_record(attempt) for attempt in attempts],
     }
+
+
+_HRONAUT_OPENROUTER_FIELDS = (
+    "model_route",
+    "upstream_provider_requested",
+    "upstream_provider_fallbacks",
+    "upstream_provider_observed",
+)
+
+
+def _validate_hronaut_identity(identity: dict[str, Any], model: str) -> None:
+    """Check the serving route and run configuration a Hronaut report claims.
+
+    The route fields are provider-specific, so a report cannot drop the
+    OpenRouter fields or relabel its provider and still verify.
+    """
+
+    def require(condition: bool, message: str) -> None:
+        if not condition:
+            raise ValueError(f"Hronaut MCP run identity {message}")
+
+    def text(name: str) -> str:
+        value = identity.get(name)
+        require(isinstance(value, str) and bool(value.strip()), f"is missing {name}")
+        return cast(str, value)
+
+    def number(name: str, *, integer: bool = False, minimum: float, exclusive: bool) -> None:
+        value = identity.get(name)
+        allowed = (int,) if integer else (int, float)
+        require(type(value) in allowed, f"has an invalid {name}")
+        require(value > minimum if exclusive else value >= minimum, f"has an invalid {name}")
+
+    # The negotiated MCP boundary is part of what this evidence claims.
+    for name in ("mcp_protocol_version", "mcp_server_name", "mcp_client_version"):
+        text(name)
+    require(
+        text("agent_version") == text("mcp_server_version"),
+        "agent_version does not match mcp_server_version",
+    )
+    for name in ("mcp_authentication", "model_transport", "thinking", "model_client_version"):
+        text(name)
+
+    provider = identity.get("provider")
+    require(provider in {"deepseek", "openrouter"}, "names an unknown provider")
+    if provider == "openrouter":
+        require(
+            identity.get("model_route") == f"deepseek/{model}",
+            "model_route does not match the model",
+        )
+        requested = identity.get("upstream_provider_requested")
+        require(
+            isinstance(requested, str)
+            and re.fullmatch(r"[a-z0-9][a-z0-9/._-]*", requested) is not None,
+            "is missing upstream_provider_requested",
+        )
+        require(
+            identity.get("upstream_provider_fallbacks") is False,
+            "must record upstream_provider_fallbacks as false",
+        )
+        observed = identity.get("upstream_provider_observed")
+        require(
+            isinstance(observed, list)
+            and all(isinstance(item, str) and bool(item.strip()) for item in observed)
+            and len(observed) == len(set(observed)),
+            "has an invalid upstream_provider_observed",
+        )
+        require(
+            len(observed) <= 1,
+            "reports more than one upstream provider although fallbacks are off",
+        )
+    else:
+        present = [name for name in _HRONAUT_OPENROUTER_FIELDS if name in identity]
+        require(not present, f"has OpenRouter fields on the deepseek route: {', '.join(present)}")
+
+    tools = identity.get("tools")
+    require(
+        isinstance(tools, list)
+        and bool(tools)
+        and all(isinstance(tool, str) and bool(tool.strip()) for tool in tools)
+        and len(tools) == len(set(tools)),
+        "has an invalid tools list",
+    )
+    digest = identity.get("tool_schema_sha256")
+    require(
+        isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) is not None,
+        "has an invalid tool_schema_sha256",
+    )
+    number("temperature", minimum=0, exclusive=False)
+    number("max_steps", integer=True, minimum=0, exclusive=True)
+    number("max_actions_per_step", integer=True, minimum=0, exclusive=True)
+    number("time_limit_seconds", minimum=0, exclusive=True)
+    number("tool_call_timeout_seconds", minimum=0, exclusive=True)
 
 
 def validate_report(report: dict[str, Any]) -> None:
@@ -392,13 +495,7 @@ def validate_report(report: dict[str, Any]) -> None:
         model = identity.get("model")
         require(model in REAL_AGENT_MODELS, "unknown real-agent model")
         if agent == "hronaut-mcp":
-            # The negotiated MCP boundary is part of what this evidence claims.
-            for name in ("mcp_protocol_version", "mcp_server_name", "mcp_server_version"):
-                value = identity.get(name)
-                require(
-                    isinstance(value, str) and bool(value.strip()),
-                    f"Hronaut MCP run identity is missing {name}",
-                )
+            _validate_hronaut_identity(identity, model)
         expected_drivers = (f"{agent}/{model}",)
     elif command == "oracle":
         expected_drivers = ("reference",)
@@ -434,6 +531,25 @@ def validate_report(report: dict[str, Any]) -> None:
             attempt.driver in expected_drivers,
             f"attempt {index} driver does not match command and run identity",
         )
+        if command == "hronaut-mcp-deepseek":
+            # This path compares with identity, so truthy stand-ins such as 1 or
+            # "false" cannot pass as recorded outcomes.
+            require(
+                isinstance(attempt.checkpoints, dict)
+                and all(type(value) is bool for value in attempt.checkpoints.values()),
+                f"attempt {index} checkpoint values must be booleans",
+            )
+            require(type(attempt.passed) is bool, f"attempt {index} pass flag must be a boolean")
+            require(
+                attempt.scored is None or type(attempt.scored) is bool,
+                f"attempt {index} scored flag must be a boolean",
+            )
+            require(
+                attempt.error is None or isinstance(attempt.error, str),
+                f"attempt {index} error must be a string or null",
+            )
+        else:
+            require(attempt.scored is None, f"attempt {index} has an unexpected scored flag")
         require(
             tuple(attempt.checkpoints) == TASK_CHECKPOINTS[attempt.task_id],
             f"attempt {index} checkpoint contract mismatch",
@@ -441,10 +557,26 @@ def validate_report(report: dict[str, Any]) -> None:
         first_failed = next(
             (name for name, passed in attempt.checkpoints.items() if not passed), None
         )
-        require(
-            attempt.first_failed_checkpoint == first_failed,
-            f"attempt {index} first-failure checkpoint mismatch",
-        )
+        if attempt.scored is False:
+            # No score was accepted: the checkpoints are placeholders, so the
+            # attempt localizes no failure and counts toward no checkpoint.
+            require(
+                not any(attempt.checkpoints.values()),
+                f"attempt {index} is unscored but carries checkpoint results",
+            )
+            require(
+                attempt.first_failed_checkpoint is None,
+                f"attempt {index} is unscored but names a first-failure checkpoint",
+            )
+            require(
+                isinstance(attempt.error, str) and bool(attempt.error.strip()),
+                f"attempt {index} is unscored but records no error",
+            )
+        else:
+            require(
+                attempt.first_failed_checkpoint == first_failed,
+                f"attempt {index} first-failure checkpoint mismatch",
+            )
         require(
             attempt.passed == (first_failed is None and attempt.error is None),
             f"attempt {index} pass flag is inconsistent",

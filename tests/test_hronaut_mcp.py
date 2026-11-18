@@ -113,7 +113,10 @@ class FakeHronaut:
             injected = self.inject[key].pop(0)
             if isinstance(injected, Exception):
                 raise injected
-            return injected
+            if callable(injected):
+                return await injected(arguments)
+            if injected is not None:
+                return injected
         return getattr(self, f"_{name}")(arguments)
 
     def _browser_workspaces(self, arguments: dict) -> ToolResult:
@@ -272,7 +275,7 @@ def run(fake: FakeHronaut, model, *, connect=None, max_steps=12, time_limit=30.0
     server = SimpleNamespace(
         url=lambda fixture, *, variant: f"http://127.0.0.1:8765/{fixture}?variant={variant}"
     )
-    attempt, trace, _browser = asyncio.run(
+    attempt, trace, _browser, _cancelled = asyncio.run(
         hronaut._run_attempt(
             connect or connector(fake),
             model,
@@ -527,6 +530,7 @@ def test_unknown_action_outcome_is_never_scored(injected) -> None:
 
     assert attempt.passed is False
     assert attempt.checkpoints == dict.fromkeys(TASK_CHECKPOINTS[TASK], False)
+    assert attempt.scored is False and attempt.first_failed_checkpoint is None
     assert "agent: browser_click" in attempt.error
     assert "scoring: skipped: a dispatched page action has an unknown outcome" in attempt.error
     # Negative control is the last observation; cleanup still runs.
@@ -1199,3 +1203,573 @@ def test_cli_rejects_an_incomplete_model_route(monkeypatch, capsys, arguments) -
 
     assert cli_module.main(["hronaut-mcp-deepseek", "--task", TASK, *arguments]) == 2
     assert "--upstream-provider" in capsys.readouterr().err
+
+
+# --- Deadline, unscored attempts and cancellation ---------------------------------------
+
+
+def test_action_that_outlasts_the_deadline_on_the_last_step_fails_the_attempt() -> None:
+    fake = FakeHronaut()
+
+    async def late(arguments):
+        await asyncio.sleep(0.3)
+        return fake._browser_click(arguments)
+
+    fake.inject["browser_click"] = [None, None, late]
+    model = ScriptedModel([click("e1"), click("e2"), click("e4")])
+
+    attempt, trace = run(fake, model, max_steps=1, time_limit=0.15)
+
+    # The action is awaited to a definite outcome, so the page is still scored.
+    assert attempt.scored is True and all(attempt.checkpoints.values())
+    assert attempt.error == "agent: time limit of 0.15 s reached"
+    assert attempt.passed is False
+    stop = next(event for event in trace["events"] if event["step"] == "model.stop")
+    assert stop == {"step": "model.stop", "reason": "time_limit", "quiescent": True}
+
+
+def test_observed_failure_is_scored_and_localized() -> None:
+    attempt, trace = run(FakeHronaut(), ScriptedModel("Done."))
+
+    assert attempt.scored is True and trace["scored"] is True
+    assert attempt.first_failed_checkpoint == PRODUCT and attempt.error is None
+
+
+def test_setup_failure_is_unscored_and_localizes_no_checkpoint(monkeypatch) -> None:
+    monkeypatch.setattr(hronaut, "version", lambda _package: "0.0.0")
+    fake = FakeHronaut()
+    fake.inject["browser_new_tab"] = [failure("Workspace is paused")]
+
+    attempt, trace = run(fake, ScriptedModel(*COMPLETE))
+
+    assert attempt.scored is False and trace["scored"] is False
+    assert attempt.checkpoints == dict.fromkeys(TASK_CHECKPOINTS[TASK], False)
+    assert attempt.first_failed_checkpoint is None and attempt.passed is False
+    assert attempt.error.startswith("setup: ")
+    report = _report_of(monkeypatch, [attempt])
+    assert report["attempts"][0]["scored"] is False
+    assert report["summaries"][0]["failure_checkpoints"] == {}
+    validate_report(report)
+
+
+def _report_of(monkeypatch, attempts: list[Attempt], *, runs: int = 1, **identity) -> dict:
+    return build_report(
+        attempts,
+        command="hronaut-mcp-deepseek",
+        runs=runs,
+        tasks=[TASK],
+        variants=["clean"],
+        browser_version="hronaut/3.14.33 Chrome/156.0.1",
+        evidence_kind="real-agent",
+        run_identity=_identity(monkeypatch, **identity),
+    )
+
+
+def _attempt(**changes) -> Attempt:
+    values = {
+        "task_id": TASK,
+        "driver": "hronaut-mcp/deepseek-v4-flash",
+        "variant": "clean",
+        "passed": True,
+        "duration_ms": 10.0,
+        "checkpoints": dict.fromkeys(TASK_CHECKPOINTS[TASK], True),
+        "first_failed_checkpoint": None,
+        "error": None,
+        "scored": True,
+    }
+    return Attempt(**(values | changes))
+
+
+UNSCORED = {
+    "passed": False,
+    "checkpoints": dict.fromkeys(TASK_CHECKPOINTS[TASK], False),
+    "error": "setup: tab creation failed",
+    "scored": False,
+}
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"first_failed_checkpoint": PRODUCT}, "unscored but names a first-failure checkpoint"),
+        (
+            {"checkpoints": {PRODUCT: True, SECURITY: False, SAVED: False}},
+            "unscored but carries checkpoint results",
+        ),
+        ({"error": None}, "unscored but records no error"),
+        ({"error": "  "}, "unscored but records no error"),
+    ],
+)
+def test_report_validator_rejects_an_inconsistent_unscored_attempt(
+    monkeypatch, changes, message
+) -> None:
+    validate_report(_report_of(monkeypatch, [_attempt(**UNSCORED)]))
+
+    with pytest.raises(ValueError, match=message):
+        validate_report(_report_of(monkeypatch, [_attempt(**(UNSCORED | changes))]))
+
+
+def test_report_without_a_scored_flag_keeps_its_earlier_meaning(monkeypatch) -> None:
+    report = _report(monkeypatch)
+
+    assert "scored" not in report["attempts"][0]
+    validate_report(report)
+
+
+def test_scored_flag_belongs_to_the_hronaut_command_only() -> None:
+    attempt = _attempt(driver="reference")
+    report = build_report([attempt], command="oracle", runs=1, tasks=[TASK], variants=["clean"])
+
+    with pytest.raises(ValueError, match="unexpected scored flag"):
+        validate_report(report)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("passed", 1, "pass flag must be a boolean"),
+        ("passed", "true", "pass flag must be a boolean"),
+        ("scored", 1, "scored flag must be a boolean"),
+        ("scored", "yes", "scored flag must be a boolean"),
+        ("error", 0, "error must be a string or null"),
+    ],
+)
+def test_report_validator_requires_actual_booleans_on_the_attempt(
+    monkeypatch, field, value, message
+) -> None:
+    report = _report_of(monkeypatch, [_attempt()])
+    validate_report(report)
+
+    report["attempts"][0][field] = value
+    with pytest.raises(ValueError, match=message):
+        validate_report(report)
+
+
+@pytest.mark.parametrize("value", [1, "true", "false", 1.0, None])
+def test_report_validator_requires_actual_booleans_in_checkpoints(monkeypatch, value) -> None:
+    report = _report_of(monkeypatch, [_attempt()])
+
+    report["attempts"][0]["checkpoints"][SECURITY] = value
+    with pytest.raises(ValueError, match="checkpoint values must be booleans"):
+        validate_report(report)
+
+    report["attempts"][0]["checkpoints"] = list(TASK_CHECKPOINTS[TASK])
+    with pytest.raises(ValueError, match="checkpoint values must be booleans"):
+        validate_report(report)
+
+
+OPENROUTER_ROUTE = {
+    "provider": "openrouter",
+    "model_route": "deepseek/deepseek-v4-flash",
+    "model_transport": "OpenRouter chat completions with function calling",
+    "upstream_provider_requested": "deepinfra/fp8",
+    "upstream_provider_fallbacks": False,
+    "upstream_provider_observed": ["DeepInfra"],
+    "thinking": "disabled (reasoning effort none)",
+}
+
+
+def _edited_report(monkeypatch, *, route=None, drop=(), **changes) -> dict:
+    report = _report_of(monkeypatch, [_attempt()], **(route or {}))
+    identity = report["configuration"]["run_identity"]
+    identity.update(changes)
+    for name in drop:
+        del identity[name]
+    return report
+
+
+def test_report_validator_accepts_both_model_routes(monkeypatch) -> None:
+    validate_report(_edited_report(monkeypatch))
+    validate_report(_edited_report(monkeypatch, route=OPENROUTER_ROUTE))
+    validate_report(
+        _edited_report(monkeypatch, route=OPENROUTER_ROUTE, upstream_provider_observed=[])
+    )
+
+
+@pytest.mark.parametrize(
+    ("drop", "changes", "message"),
+    [
+        (("model_route",), {}, "model_route does not match the model"),
+        (("upstream_provider_requested",), {}, "is missing upstream_provider_requested"),
+        (("upstream_provider_fallbacks",), {}, "upstream_provider_fallbacks as false"),
+        (("upstream_provider_observed",), {}, "invalid upstream_provider_observed"),
+        ((), {"provider": "deepseek"}, "OpenRouter fields on the deepseek route"),
+        ((), {"provider": "other"}, "names an unknown provider"),
+        ((), {"model_route": "deepseek/deepseek-v4-pro"}, "model_route does not match"),
+        ((), {"upstream_provider_requested": "Deep Infra"}, "upstream_provider_requested"),
+        ((), {"upstream_provider_fallbacks": True}, "upstream_provider_fallbacks as false"),
+        ((), {"upstream_provider_fallbacks": 0}, "upstream_provider_fallbacks as false"),
+        ((), {"upstream_provider_observed": "DeepInfra"}, "invalid upstream_provider_observed"),
+        (
+            (),
+            {"upstream_provider_observed": ["DeepInfra", "Novita"]},
+            "more than one upstream provider although fallbacks are off",
+        ),
+    ],
+)
+def test_report_validator_cross_checks_the_openrouter_route(
+    monkeypatch, drop, changes, message
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        validate_report(_edited_report(monkeypatch, route=OPENROUTER_ROUTE, drop=drop, **changes))
+
+
+@pytest.mark.parametrize(
+    ("drop", "changes", "message"),
+    [
+        (("provider",), {}, "names an unknown provider"),
+        ((), {"upstream_provider_requested": "deepinfra/fp8"}, "OpenRouter fields on the deepseek"),
+        ((), {"agent_version": "3.14.29"}, "agent_version does not match mcp_server_version"),
+        (("mcp_client_version",), {}, "is missing mcp_client_version"),
+        (("model_client_version",), {}, "is missing model_client_version"),
+        (("model_transport",), {}, "is missing model_transport"),
+        (("tools",), {}, "invalid tools list"),
+        ((), {"tools": []}, "invalid tools list"),
+        ((), {"tools": ["browser_click", "browser_click"]}, "invalid tools list"),
+        (("tool_schema_sha256",), {}, "invalid tool_schema_sha256"),
+        ((), {"tool_schema_sha256": "44051cfb"}, "invalid tool_schema_sha256"),
+        ((), {"max_steps": 0}, "invalid max_steps"),
+        ((), {"max_steps": True}, "invalid max_steps"),
+        ((), {"max_steps": "12"}, "invalid max_steps"),
+        ((), {"max_actions_per_step": 2.5}, "invalid max_actions_per_step"),
+        (("time_limit_seconds",), {}, "invalid time_limit_seconds"),
+        ((), {"time_limit_seconds": 0}, "invalid time_limit_seconds"),
+        ((), {"tool_call_timeout_seconds": -1.0}, "invalid tool_call_timeout_seconds"),
+        ((), {"temperature": "0"}, "invalid temperature"),
+    ],
+)
+def test_report_validator_checks_the_run_configuration(monkeypatch, drop, changes, message) -> None:
+    with pytest.raises(ValueError, match=message):
+        validate_report(_edited_report(monkeypatch, drop=drop, **changes))
+
+
+def _matrix(fake: FakeHronaut, model, *, runs=1, persist=None):
+    return hronaut.run_hronaut_matrix(
+        connect=connector(fake),
+        model_client=model,
+        model="deepseek-v4-flash",
+        identity=IDENTITY,
+        tasks=[TASK],
+        variants=["clean"],
+        runs=runs,
+        max_steps=12,
+        time_limit_seconds=30.0,
+        known_secrets=(API_KEY,),
+        persist=persist,
+    )
+
+
+def _cancel_at(reached: asyncio.Event, work, *, times=1, release=None) -> None:
+    """Cancel the run once the scripted point is reached; it must still propagate."""
+
+    async def scenario() -> None:
+        running = asyncio.ensure_future(work)
+        await reached.wait()
+        for _ in range(times):
+            running.cancel()
+            await asyncio.sleep(0.01)
+        if release is not None:
+            release.set()
+        with pytest.raises(asyncio.CancelledError):
+            await running
+
+    asyncio.run(scenario())
+
+
+def test_every_declared_attempt_is_registered_and_saved_as_it_finishes(monkeypatch) -> None:
+    monkeypatch.setattr(hronaut, "version", lambda _package: "0.0.0")
+    snapshots: list[tuple] = []
+
+    attempts, _trace, _browser = asyncio.run(
+        _matrix(
+            FakeHronaut(),
+            ScriptedModel(*COMPLETE, *COMPLETE),
+            runs=2,
+            persist=lambda *state: snapshots.append(state),
+        )
+    )
+
+    assert [attempt.passed for attempt in attempts] == [True, True]
+    # Before the first attempt, then after each terminal result.
+    pending = "not completed: the run ended before this attempt reached a terminal result"
+    assert [[a.error for a in state[0]] for state in snapshots] == [
+        [pending, pending],
+        [None, pending],
+        [None, None],
+    ]
+    assert all(a.scored is False and a.first_failed_checkpoint is None for a in snapshots[0][0])
+    validate_report(_report_of(monkeypatch, snapshots[1][0], runs=2))
+
+
+def test_cancellation_between_attempts_stops_the_next_worker_before_it_starts(monkeypatch) -> None:
+    monkeypatch.setattr(hronaut, "version", lambda _package: "0.0.0")
+    fake, model, snapshots = FakeHronaut(), ScriptedModel(*COMPLETE), []
+
+    def persist(*state) -> None:
+        snapshots.append(state)
+        if len(snapshots) == 2:  # The first attempt has just been saved.
+            asyncio.current_task().cancel()
+
+    async def scenario() -> None:
+        with pytest.raises(asyncio.CancelledError):
+            await _matrix(fake, model, runs=3, persist=persist)
+
+    asyncio.run(scenario())
+
+    attempts, trace, _browser = snapshots[-1]
+    assert attempts[0].passed is True and attempts[0].scored is True
+    for unstarted in attempts[1:]:
+        assert unstarted.error == "cancelled: the run was cancelled before this attempt started"
+        assert unstarted.scored is False and unstarted.first_failed_checkpoint is None
+        assert unstarted.passed is False
+    # The second worker never ran: one workspace was created and closed, no more.
+    assert fake.names().count("browser_workspaces") == 2 and len(model.requests) == 3
+    assert trace["cancelled"] is True
+    assert [item["cancelled"] for item in trace["attempts"]] == [False, True, True]
+    report = _report_of(monkeypatch, attempts, runs=3)
+    assert report["summaries"][0]["failure_checkpoints"] == {}
+    validate_report(report)
+
+
+def test_cancellation_during_a_model_turn_scores_cleans_up_and_then_propagates(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(hronaut, "version", lambda _package: "0.0.0")
+    fake, reached, snapshots = FakeHronaut(), asyncio.Event(), []
+
+    async def hang():
+        reached.set()
+        await asyncio.sleep(30)
+
+    model = ScriptedModel([click("e1")], hang)
+    _cancel_at(
+        reached, _matrix(fake, model, runs=2, persist=lambda *state: snapshots.append(state))
+    )
+
+    first, second = snapshots[-1][0]
+    # No page action was in flight, so the original page is scored before cleanup.
+    assert first.scored is True
+    assert first.checkpoints == {PRODUCT: True, SECURITY: False, SAVED: False}
+    assert first.error == "cancelled: the run was cancelled during a model turn"
+    assert first.passed is False
+    assert fake.names()[-3:] == ["browser_tabs", "browser_evaluate", "browser_workspaces"]
+    assert fake.calls[-1][1] == {"action": "close", "workspaceId": "ws-1"}
+    assert second.error == "cancelled: the run was cancelled before this attempt started"
+    assert fake.names().count("browser_new_tab") == 1
+
+
+def test_cancellation_during_a_dispatched_action_is_not_scored(monkeypatch) -> None:
+    monkeypatch.setattr(hronaut, "version", lambda _package: "0.0.0")
+    fake, reached, snapshots = FakeHronaut(), asyncio.Event(), []
+
+    async def hang(_arguments):
+        reached.set()
+        await asyncio.sleep(30)
+
+    fake.inject["browser_click"] = [hang]
+    model = ScriptedModel([click("e1")], "unreachable")
+    _cancel_at(reached, _matrix(fake, model, persist=lambda *state: snapshots.append(state)))
+
+    (attempt,) = snapshots[-1][0]
+    assert attempt.scored is False and attempt.first_failed_checkpoint is None
+    assert attempt.checkpoints == dict.fromkeys(TASK_CHECKPOINTS[TASK], False)
+    assert attempt.error == (
+        "cancelled: the run was cancelled during browser_click; "
+        "scoring: skipped: a dispatched page action has an unknown outcome"
+    )
+    # The click is the last page call; cleanup still closes the workspace.
+    assert fake.names()[-2:] == ["browser_click", "browser_workspaces"]
+    assert len(model.requests) == 1
+
+
+def _slow_close(fake: FakeHronaut):
+    reached, release, finished = asyncio.Event(), asyncio.Event(), []
+
+    async def close(arguments):
+        reached.set()
+        await release.wait()
+        finished.append(arguments)
+        return text([])
+
+    fake.inject["browser_workspaces:close"] = [close]
+    return reached, release, finished
+
+
+def test_repeated_cancellation_during_cleanup_keeps_the_score_and_finishes_the_close(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(hronaut, "version", lambda _package: "0.0.0")
+    fake, snapshots = FakeHronaut(), []
+    reached, release, finished = _slow_close(fake)
+
+    _cancel_at(
+        reached,
+        _matrix(fake, ScriptedModel(*COMPLETE), persist=lambda *state: snapshots.append(state)),
+        times=2,
+        release=release,
+    )
+
+    (attempt,) = snapshots[-1][0]
+    assert finished == [{"action": "close", "workspaceId": "ws-1"}]
+    assert attempt.scored is True and all(attempt.checkpoints.values())
+    assert attempt.first_failed_checkpoint is None
+    # Score, cancellation and cleanup stay separate: only the cancellation is an error here.
+    assert attempt.error == "cancelled: the run was cancelled during cleanup"
+    assert attempt.passed is False
+
+
+def test_attempt_worker_absorbs_repeated_cancellation_until_cleanup_ends() -> None:
+    fake = FakeHronaut()
+    reached, release, finished = _slow_close(fake)
+    server = SimpleNamespace(
+        url=lambda fixture, *, variant: f"http://127.0.0.1:8765/{fixture}?variant={variant}"
+    )
+
+    async def scenario():
+        worker = asyncio.ensure_future(
+            hronaut._run_attempt(
+                connector(fake),
+                ScriptedModel(*COMPLETE),
+                server,
+                identity=IDENTITY,
+                driver="hronaut-mcp/deepseek-v4-flash",
+                task_id=TASK,
+                variant="clean",
+                index=1,
+                max_steps=12,
+                time_limit_seconds=30.0,
+                known_secrets=(),
+            )
+        )
+        await reached.wait()
+        for _ in range(3):
+            worker.cancel()
+            await asyncio.sleep(0.01)
+        assert not worker.done() and not finished
+        release.set()
+        return await worker
+
+    result = asyncio.run(scenario())
+
+    assert result.cancelled is True and len(finished) == 1
+    assert result.attempt.scored is True and all(result.attempt.checkpoints.values())
+    assert result.trace["errors"] == {"cancelled": "the run was cancelled during cleanup"}
+
+
+def test_cli_cancelled_run_leaves_a_verifiable_report_of_every_declared_attempt(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    async def interrupt():
+        for task in asyncio.all_tasks():
+            if task.get_name() == "hronaut-mcp-run":
+                task.cancel()
+        await asyncio.sleep(30)
+
+    _patch_cli(monkeypatch, FakeHronaut(), ScriptedModel(*COMPLETE, interrupt))
+    monkeypatch.setenv("DEEPSEEK_API_KEY", API_KEY)
+    output, trace = tmp_path / "report.json", tmp_path / "trace.json"
+
+    result = cli_module.main(
+        [
+            "hronaut-mcp-deepseek",
+            "--task",
+            TASK,
+            "--runs",
+            "3",
+            "--output",
+            str(output),
+            "--trace-output",
+            str(trace),
+        ]
+    )
+
+    assert result == 130
+    report = json.loads(output.read_text(encoding="utf-8"))
+    first, second, third = report["attempts"]
+    assert first["passed"] is True and first["scored"] is True
+    assert second["error"] == "cancelled: the run was cancelled during a model turn"
+    assert second["scored"] is True and second["first_failed_checkpoint"] == PRODUCT
+    assert third["error"] == "cancelled: the run was cancelled before this attempt started"
+    assert third["scored"] is False and third["first_failed_checkpoint"] is None
+    assert cli_module.main(["verify", "--report", str(output)]) == 0
+    assert json.loads(trace.read_text(encoding="utf-8"))["cancelled"] is True
+    assert not list(tmp_path.glob(".*.tmp"))
+    captured = capsys.readouterr()
+    assert "Cancelled: every declared attempt is retained" in captured.err
+    assert "1/3 attempts passed independent checks" in captured.out
+
+
+def test_cli_saves_the_report_when_the_optional_trace_cannot_be_written(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    _patch_cli(monkeypatch, FakeHronaut(), ScriptedModel(*COMPLETE))
+    monkeypatch.setenv("DEEPSEEK_API_KEY", API_KEY)
+    blocker = tmp_path / "blocker"
+    blocker.write_text("a file where the trace directory should be", encoding="utf-8")
+    output = tmp_path / "report.json"
+
+    result = cli_module.main(
+        [
+            "hronaut-mcp-deepseek",
+            "--task",
+            TASK,
+            "--output",
+            str(output),
+            "--trace-output",
+            str(blocker / "trace.json"),
+        ]
+    )
+
+    assert result == 2
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["attempts"][0]["passed"] is True
+    assert cli_module.main(["verify", "--report", str(output)]) == 0
+    captured = capsys.readouterr()
+    assert "the trace could not be written" in captured.err
+    assert "1/1 attempts passed independent checks" in captured.out
+
+
+def test_cli_stops_before_any_paid_request_when_the_report_cannot_be_written(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    fake, model = FakeHronaut(), ScriptedModel(*COMPLETE)
+    _patch_cli(monkeypatch, fake, model)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", API_KEY)
+    blocker = tmp_path / "blocker"
+    blocker.write_text("a file where the report directory should be", encoding="utf-8")
+
+    result = cli_module.main(
+        ["hronaut-mcp-deepseek", "--task", TASK, "--output", str(blocker / "report.json")]
+    )
+
+    assert result == 2
+    assert fake.calls == [] and model.requests == []
+    assert "the report could not be written" in capsys.readouterr().err
+
+
+def test_cli_interrupt_after_the_last_attempt_finished_cancels_nothing(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    class LateInterrupt:
+        """A fixture server whose shutdown, after the last attempt, sees the interrupt."""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_exc) -> None:
+            asyncio.current_task().cancel()
+
+        def url(self, fixture, *, variant):
+            return f"http://127.0.0.1:8765/{fixture}?variant={variant}"
+
+    _patch_cli(monkeypatch, FakeHronaut(), ScriptedModel(*COMPLETE))
+    monkeypatch.setattr(hronaut, "FixtureServer", LateInterrupt)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", API_KEY)
+    output = tmp_path / "report.json"
+
+    result = cli_module.main(["hronaut-mcp-deepseek", "--task", TASK, "--output", str(output)])
+
+    assert result == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["attempts"][0]["passed"] is True and report["attempts"][0]["error"] is None
+    assert "Cancelled" not in capsys.readouterr().err

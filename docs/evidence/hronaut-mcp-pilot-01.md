@@ -1,6 +1,7 @@
 # Hronaut MCP pilot 01 — one-task integration feasibility
 
-**Source revision:** the adapter commit of this change, on top of `8e2f204` (`v1.1.3`)
+**Source revision:** `3bff345`, the first adapter commit of this change, on top of `8e2f204`
+(`v1.1.3`)
 
 **Date:** 2026-11-17
 
@@ -58,5 +59,10 @@ profile path is present.
 This is one run on one task and one variant. It shows that the adapter, a live Hronaut MCP
 session, a model loop and independent scoring work together end to end. It is not evidence of
 reliability, of behavior under the perturbed variants, or of broader Hronaut compatibility.
-Failure paths (lost or replaced page, unknown action outcome, cleanup errors) are exercised by
-the unit tests, not by this attempt. Reconnect recovery remains out of scope.
+Failure paths (lost or replaced page, unknown action outcome, cleanup errors, cancellation) are
+exercised by the unit tests, not by this attempt. Reconnect recovery remains out of scope.
+
+The report was written at `3bff345`, before review changes to the attempt lifecycle and before
+attempts recorded `scored`. It has not been regenerated or edited. `verify` reads a report without
+`scored` with its earlier meaning, that the checkpoints are observed values, which is what this
+attempt recorded.

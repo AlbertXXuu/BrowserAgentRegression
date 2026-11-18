@@ -24,7 +24,7 @@ not an agent's self-reported success, determine the result.
 | `environment` | Python, platform, Playwright, and browser versions |
 | `fixture_sha256` | hashes for every task HTML and JSON manifest |
 | `configuration` | run count, tasks, variants, and optional non-secret run identity |
-| `attempts` | ordered checkpoints, first failure, bounded error, duration, and pass flag |
+| `attempts` | ordered checkpoints, first failure, bounded error, duration, and pass flag; `hronaut-mcp-deepseek` attempts also record `scored` |
 | `summaries` | success counts/rates and failure-checkpoint counts by cell |
 | `regressions` | negative candidate-minus-baseline deltas and localization agreement |
 
@@ -34,12 +34,19 @@ not an agent's self-reported success, determine the result.
 
 1. task and variant identifiers are declared and known;
 2. every attempt contains exactly the ordered checkpoints for its task;
-3. `first_failed_checkpoint` and `passed` agree with checkpoint/error evidence;
+3. `first_failed_checkpoint` and `passed` agree with checkpoint/error evidence; an attempt with
+   `scored: false` (written only by `hronaut-mcp-deepseek`) must instead carry all-false
+   placeholder checkpoints, a null `first_failed_checkpoint` and an error, so it counts toward no
+   failure checkpoint; a report without `scored` keeps the earlier meaning, and for
+   `hronaut-mcp-deepseek` the checkpoint values, `passed` and `scored` must be actual booleans;
 4. the command determines the expected drivers: `reference` for `oracle`, both `reference` and
    `popup-blind` for `demo`/`calibrate`, or the single real-agent driver `<agent>/<model>` named
-   by the run identity: `browser-use` for `deepseek`, `hronaut-mcp` for `hronaut-mcp-deepseek`
-   (whose identity must also name the negotiated MCP protocol and server); the evidence kind must
-   also match the command;
+   by the run identity: `browser-use` for `deepseek`, `hronaut-mcp` for `hronaut-mcp-deepseek`;
+   the evidence kind must also match the command. A `hronaut-mcp` identity must also name the
+   negotiated MCP protocol, server and client, a `provider` of `deepseek` or `openrouter` with
+   exactly that provider's route fields (for `openrouter`: `model_route` matching the model, one
+   requested upstream, `upstream_provider_fallbacks: false` and at most one observed upstream),
+   a non-empty tool list with a SHA-256 schema digest, and positive step, action and time limits;
 5. every declared task/driver/variant cell contains exactly the positive integer run count,
    including failed attempts;
 6. summaries and regressions recompute exactly from attempts;
@@ -67,3 +74,4 @@ executed; v1 reports have no signed plan or unique repetition identities.
 - `0`: command completed and met its acceptance condition.
 - `1`: experiment completed, but an oracle/calibration/agent acceptance condition failed.
 - `2`: invalid input/evidence or runtime/setup failure.
+- `130`: `hronaut-mcp-deepseek` was cancelled; every declared attempt was saved first.

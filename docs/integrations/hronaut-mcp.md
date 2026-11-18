@@ -230,7 +230,7 @@ launch Hronaut. The first attempt is recorded in
 | --- | --- |
 | CLI command and report `command` | `hronaut-mcp-deepseek` |
 | Driver | `hronaut-mcp/<model>`, bound by `validate_report()` to the identity's agent and model |
-| Run identity `agent` | `hronaut-mcp`, with required `mcp_protocol_version`, `mcp_server_name`, `mcp_server_version` |
+| Run identity `agent` | `hronaut-mcp`; `validate_report()` also requires the negotiated MCP boundary, the provider-specific model route, the tool list and schema digest, and the execution limits |
 | Evidence kind | `real-agent` |
 
 ### Run it
@@ -265,9 +265,12 @@ the tab's address with the exact fixture URL.
 
 ### What one attempt does
 
-1. **Prepare.** The attempt record starts with the declared task, variant, driver and ordered false
-   checkpoints. Defaults: `--max-steps 12` and at most 3 actions per step, as for `deepseek`, plus
-   `--time-limit 300` seconds.
+1. **Prepare.** Every declared attempt is registered before the first one is scheduled, with the
+   declared task, variant, driver and ordered false placeholder checkpoints. The report is saved
+   once before the first attempt and again after each terminal result, so an unwritable `--output`
+   stops the run before any paid request and an interrupted run keeps what it finished. Defaults:
+   `--max-steps 12` and at most 3 actions per step, as for `deepseek`, plus `--time-limit 300`
+   seconds.
 2. **Open and bind.** A new scratch workspace has no tab (`activeTabId: null`), so the adapter
    creates the workspace, opens one tab at `FixtureServer.url(...)` with `browser_new_tab`, and
    records both ids. Once the document is `complete` at that exact URL it defines a non-enumerable,
@@ -297,20 +300,37 @@ JSON, and restores the declared checkpoint order.
 
 ### Failures that stay in the report
 
-Every declared attempt produces a record. `error` joins the stages that failed, in order, as
-`setup: …; agent: …; scoring: …; cleanup: …; connection: …`, each bounded and redacted, so a
-cleanup error cannot replace or be replaced by an earlier one. Any error means `passed=False`, even
-with three true checkpoints.
+Every declared attempt produces a record. `error` joins the stages that failed, in the order they
+happened, from `setup`, `agent`, `scoring`, `cancelled`, `cleanup` and `connection`, each bounded
+and redacted, so a cleanup error or a cancellation cannot replace or be replaced by an earlier one.
+Any error means `passed=False`, even with three true checkpoints.
+
+Each attempt also records `scored`. It is `true` only when an observation of the original page
+was accepted. An unscored attempt (`scored: false`) keeps its false placeholder checkpoints, has
+`first_failed_checkpoint: null` and an error, and adds nothing to the failure-checkpoint counts:
+it is a failed attempt, not an observed failure at the first checkpoint.
 
 | Situation | Recorded outcome |
 | --- | --- |
 | Model stops, hits `--max-steps`, or a tool returns a definite error | Page is scored; partial checkpoints are kept. |
 | Time limit reached during a model turn | `agent` error; the page is quiescent, so it is scored. |
+| A page action begins before the time limit and ends after it, on any step including the last | The action is awaited to a definite outcome, then `agent` error; the page is scored. |
 | Provider or model request fails | `agent` error; the page is scored. |
-| A dispatched page action times out, loses the transport, or reports `OUTCOME_UNKNOWN`/`TIMED_OUT` | `agent` error and `scoring: skipped`; checkpoints stay false. A dispatched action is never cancelled by the time limit. |
-| Tab gone, URL changed, document replaced, node missing, or invalid observation | `scoring` error; checkpoints stay false. No replacement page is scored. |
+| A dispatched page action times out, loses the transport, or reports `OUTCOME_UNKNOWN`/`TIMED_OUT` | `agent` error and `scoring: skipped`; the attempt is unscored. A dispatched action is never cancelled by the time limit. |
+| Tab gone, URL changed, document replaced, node missing, or invalid observation | `scoring` error; the attempt is unscored. No replacement page is scored. |
 | Workspace close fails | `cleanup` error; scored checkpoints are kept. |
-| MCP session cannot be opened or fails while closing | `setup` or `connection` error on that attempt. |
+| MCP session cannot be opened or fails while closing | `setup` or `connection` error on that attempt; a setup failure is unscored. |
+| Run cancelled (Ctrl+C) during a model turn | `cancelled`; no page action is in flight, so the page is scored, then the workspace is closed. |
+| Run cancelled while a page action is in flight | `cancelled` and `scoring: skipped`; the attempt is unscored and the workspace is closed. |
+| Run cancelled during scoring or cleanup, also repeatedly | Scoring and the workspace close run to completion; `cancelled` is recorded next to the score and any `cleanup` error. |
+| Run cancelled before an attempt starts | That attempt is kept as `cancelled`, unscored. |
+
+A cancelled run saves every declared attempt, then exits with `130`; the saved report still passes
+`verify`. Where the event loop supports signal handlers (POSIX), a repeated Ctrl+C is absorbed
+until the current attempt is scored, cleaned up and saved; each adapter call is still bounded by
+its 60-second timeout. Elsewhere a second Ctrl+C is a hard interrupt that can cut cleanup short.
+In that case, and after a forced process kill, the report saved after the previous attempt is
+still on disk, with the unfinished attempts recorded as `not completed`.
 
 If Hronaut cannot be reached before the first attempt there is no negotiated identity to record,
 so the command exits with `2` and writes no report. Reconnect recovery is out of scope: a
@@ -320,6 +340,8 @@ disconnect fails the attempt.
 version, the tool schemas, workspace and tab creation, binding, negative control, scoring and
 close). Resume keys are redacted and local profile paths are not copied. The trace and the
 `--preflight` artifact (`"artifact": "seam-preflight"`) are supporting material, not BAR reports.
+The report is always written first. If the trace cannot be written, the report is kept and the
+command exits with `2`.
 
 ## References
 
